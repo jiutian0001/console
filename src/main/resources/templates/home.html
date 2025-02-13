@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>后台管理系统</title>
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    :root {
+      --sidebar-width: 240px;
+      --primary-color: #4b6cb7;
+      --secondary-color: #182848;
+      --accent-color: #ffeb3b;
+      --text-light: #ffffff;
+      --transition-speed: 0.3s;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f6f9;
+      color: #333;
+      overflow: hidden;
+    }
+
+    /* 侧边栏样式 */
+    .sidebar {
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-width);
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: var(--text-light);
+      overflow-y: auto;
+      overflow-x: hidden;
+      transition: transform var(--transition-speed);
+      z-index: 1000;
+    }
+
+    .sidebar-header {
+      padding: 20px;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebar-header h4 {
+      margin: 0;
+      color: var(--accent-color);
+      font-size: 1.4rem;
+      font-weight: 600;
+    }
+
+    /* 菜单样式优化 */
+    .nav-item {
+      margin: 4px 8px;
+    }
+
+    .nav-link {
+      color: var(--text-light) !important;
+      padding: 12px 16px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all var(--transition-speed);
+    }
+
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateX(5px);
+    }
+
+    .nav-link i {
+      margin-right: 8px;
+      transition: transform var(--transition-speed);
+    }
+
+    /* 子菜单样式优化 */
+    .submenu {
+      list-style: none;
+      padding-left: 16px;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height var(--transition-speed);
+    }
+
+    .submenu.show {
+      max-height: 500px;
+    }
+
+    .submenu .nav-link {
+      font-size: 0.95rem;
+      padding: 10px 16px;
+      opacity: 0.9;
+    }
+
+    .submenu .nav-link:hover {
+      opacity: 1;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* 菜单展开/收起图标动画 */
+    .nav-link.active i.fa-chevron-right {
+      transform: rotate(90deg);
+    }
+
+    /* 内容区域 */
+    .content {
+      margin-left: var(--sidebar-width);
+      height: 100vh;
+      transition: margin var(--transition-speed);
+      background: #f4f6f9;
+    }
+
+    .content iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: white;
+    }
+
+    /* 滚动条美化 */
+    .sidebar::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .sidebar::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+    }
+
+    /* 动画效果 */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .nav-item {
+      animation: fadeIn 0.3s ease-out forwards;
+    }
+
+    /* 响应式设计 */
+    @media (max-width: 768px) {
+      :root {
+        --sidebar-width: 0px;
+      }
+
+      .sidebar {
+        transform: translateX(-100%);
+      }
+
+      .sidebar.show {
+        transform: translateX(0);
+        width: 240px;
+      }
+
+      .content {
+        margin-left: 0;
+      }
+
+      .menu-toggle {
+        display: block;
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        z-index: 1001;
+        background: var(--primary-color);
+        color: white;
+        padding: 8px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+    }
+    
+    /* 添加用户信息区域样式 */
+    .user-info {
+        padding: 20px;
+        background: rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .user-info .user-name {
+        color: #fff;
+        font-size: 14px;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .user-info .user-name i {
+        font-size: 16px;
+    }
+
+    .logout-btn {
+        padding: 6px 12px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        color: #fff;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .logout-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+  </style>
+</head>
+<body>
+  <!-- 移动端菜单按钮 -->
+  <div class="menu-toggle d-md-none" onclick="toggleSidebar()">
+    <i class="fas fa-bars"></i>
+  </div>
+
+  <!-- 侧边栏 -->
+  <div class="sidebar">
+   <!-- 用户信息区域 -->
+    <div class="user-info">
+        <div class="user-name">
+            <i class="fas fa-user"></i>
+            <span th:text="${session.userName}">用户名</span>
+        </div>
+        <button class="logout-btn" onclick="logout()">登出</button>
+    </div>
+    <!-- <div class="sidebar-header">
+      <h4>管理系统</h4>
+    </div> -->
+    <ul class="nav flex-column" id="menuList">
+      <!-- Thymeleaf 循环生成菜单 -->
+      <li th:each="menu : ${menus}" class="nav-item">
+        <a href="#" class="nav-link" th:text="${menu.menuName}" 
+           th:data-url="${menu.menuUrl}" onclick="toggleSubMenu(this)">
+          <span>
+            <i class="fas fa-folder"></i>
+            <span th:text="${menu.menuName}"></span>
+          </span>
+          <i class="fas fa-chevron-right"></i>
+        </a>
+        <!-- 子菜单 -->
+        <ul th:if="${menu.submenus.size() > 0}" class="submenu">
+          <li th:each="sub : ${menu.submenus}" class="nav-item">
+            <a href="#" class="nav-link" th:text="${sub.menuName}" 
+               th:data-url="${sub.menuUrl}" onclick="loadContent(this)">
+              <span>
+                <i class="fas fa-file"></i>
+                <span th:text="${sub.menuName}"></span>
+              </span>
+            </a>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+
+  <!-- 内容区域 -->
+  <div class="content">
+    <iframe id="contentFrame" src="/index/data"></iframe>
+  </div>
+
+  <script>
+    // 切换侧边栏（移动端）
+    function toggleSidebar() {
+      document.querySelector('.sidebar').classList.toggle('show');
+    }
+
+    // 切换子菜单
+    function toggleSubMenu(element) {
+      const submenu = element.nextElementSibling;
+      const icon = element.querySelector('.fa-chevron-right');
+      
+      // 关闭其他打开的子菜单
+      document.querySelectorAll('.submenu.show').forEach(menu => {
+        if (menu !== submenu) {
+          menu.classList.remove('show');
+          menu.previousElementSibling.classList.remove('active');
+          menu.previousElementSibling.querySelector('.fa-chevron-right').style.transform = 'rotate(0deg)';
+        }
+      });
+
+      if (submenu) {
+        submenu.classList.toggle('show');
+        element.classList.toggle('active');
+        icon.style.transform = submenu.classList.contains('show') ? 'rotate(90deg)' : 'rotate(0deg)';
+      }
+    }
+
+    // 加载内容
+    function loadContent(element) {
+      const url = element.getAttribute('data-url');
+      document.getElementById('contentFrame').src = url;
+
+      // 移动端自动收起侧边栏
+      if (window.innerWidth <= 768) {
+        document.querySelector('.sidebar').classList.remove('show');
+      }
+    }
+
+    // 监听窗口大小变化
+    window.addEventListener('resize', function() {
+      if (window.innerWidth > 768) {
+        document.querySelector('.sidebar').classList.remove('show');
+      }
+    });
+  </script>
+</body>
+</html>

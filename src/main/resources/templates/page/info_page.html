@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>详情页面 - 常见组件</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <style>
+    body {
+      background-color: #f9f9f9;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+    }
+    .card {
+      margin-bottom: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+    }
+    .card-header {
+      background: #4b6cb7;
+      color: #fff;
+      font-weight: bold;
+    }
+    .form-control-plaintext {
+      background-color: transparent;
+      border: none;
+    }
+    .image-preview {
+      width: 100%;
+      max-width: 150px;
+      height: auto;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      margin-bottom: 10px;
+    }
+  </style>
+   <style>
+        .generated-card {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+        .generated-card:hover {
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        .generated-input, .generated-select {
+            width: 15%;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        .icon-button {
+            border: none;
+            background: transparent;
+            color: #dc3545;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        .icon-button:hover {
+            color: #a71d2a;
+        }
+    </style>
+    <style>
+        .generated-group {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .input-inline {
+            width: 20%;
+            margin-right: 10px;
+        }
+        .generated-group .remove-btn {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- 顶部标题和操作按钮 -->
+  <!-- 基本信息区 -->
+   <form id="fff" action="/page/save" method="post">
+  <div class="card">
+    <div class="card-header">页面信息</div>
+    <div class="card-body">
+        <!-- 动态生成不同类型的组件 -->
+        <div th:each="field : ${returnPage.info}">
+          <div class="row mb-3">
+            <label  th:if="${field.type!='hidden'}" th:for="${field.javaBeanName}" th:text="${field.displayName}" class="col-sm-3 col-form-label"></label>
+            <div class="col-sm-9">
+
+              <!-- 根据组件类型选择显示 -->
+              <div th:switch="${field.type}">
+                <!-- 文本框 -->
+                <input th:case="'input'" type="text" th:name="${field.javaBeanName}" th:id="${field.javaBeanName}" 
+                        class="form-control"  th:value="|${returnPage.val[map][field.javaBeanName]}|">
+
+                <!-- 下拉选择框 -->
+                <select th:case="'select'" th:name="${field.javaBeanName}" th:id="${field.javaBeanName}" class="form-select" >
+                 <option value="">请选择</option>
+                  <option th:each="option : ${returnPage.val[field.config]}"  th:value="${option.value.sysCode}" th:text="${option.value.sysName}" th:selected="${option.value.sysCode==returnPage.val[map][field.javaBeanName]}" ></option>
+                </select>
+
+                <!-- 单选按钮 -->
+                <div th:case="'radio'" class="d-flex">
+                 <!--  <div class="form-check me-3" th:each="option : ${field.options}">
+                    <input class="form-check-input" type="radio" th:name="${field.javaBeanName}" th:id="${field.javaBeanName} + '_' + ${option.value}"
+                           th:value="${option.value}" th:checked="${option.value == field.value}" disabled>
+                    <label class="form-check-label" th:for="${field.javaBeanName} + '_' + ${option.value}" th:text="${option.label}"></label>
+                  </div> -->
+                </div>
+
+                <!-- 多选按钮 -->
+                <div th:case="'checkbox'" class="d-flex">
+                  <div class="form-check me-3" th:each="option : ${field.options}">
+                    <!-- <input class="form-check-input" type="checkbox" th:name="${field.javaBeanName}" th:id="${field.javaBeanName} + '_' + ${option.value}"
+                           th:value="${option.value}" th:checked="${field.value.contains(option.value)}" disabled>
+                    <label class="form-check-label" th:for="${field.javaBeanName} + '_' + ${option.value}" th:text="${option.label}"></label> -->
+                  </div>
+                </div>
+
+                <!-- 文件上传（图片） -->
+                <div th:case="'file'">
+                  <img id="imagePreview" th:src="${field.value}" class="image-preview" alt="预览">
+                  <input type="file" class="form-control mt-2" th:id="${field.javaBeanName}" accept="image/*" disabled>
+                  <button type="button" class="btn btn-outline-secondary mt-2" onclick="downloadImage()" disabled>下载</button>
+                </div>
+
+                <!-- 隐藏域 -->
+                <input th:case="'hidden'" type="hidden" th:name="${field.javaBeanName}" th:id="${field.javaBeanName}" >
+              </div>
+            </div>
+          </div>
+        </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header">Cmd命令</div>
+    
+      <div class="generated-card">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <input name="cmdName" placeholder="CMD命令" type="text" class="form-control generated-input">
+                            <input name="cmdClzz" placeholder="执行类" type="text" class="form-control generated-input">
+                            <input name="tableName" placeholder="表名称" type="text" class="form-control generated-input" value="">
+                             <select name="cmdFunc"  class="form-select generated-select">
+                              <option value="">执行方法</option>
+                                <option value="selectByPage">selectByPage</option>
+                                <option value="findBySearch">findBySearch</option>
+                                <option value="save">save</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+  </div>
+<div class="card">
+    <div class="card-header">JS_CSS    <button type="button" class="btn" id="addGroupBtn">添加新组</button></div>
+    
+    <div id="dynamicContainer" class="card-body">
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header">页面内容 </div>
+    
+   <div class="container my-4">
+    <div class="mb-3">
+        <label for="sqlInput" class="form-label">输入 MySQL 建表语句</label>
+        <textarea id="sqlInput" class="form-control" rows="6" placeholder="输入建表语句"></textarea>
+    </div>
+    <button type="button" class="btn btn-success" id="generateFormBtn">生成表单</button>
+
+    <div id="add_attr"></div>
+</div>
+  </div>
+  <!-- 操作区域 -->
+  <div class="d-flex justify-content-end">
+    <button type="button" class="btn btn-success me-2"  onclick="sub()">保存</button>
+    <button class="btn btn-secondary" onclick="window.history.back()">返回</button>
+  </div>
+  </form>
+</div>
+<script th:each="js : ${returnPage.js}"  th:src="${js.filePath}"></script>
+<script>
+function sub(){
+	$("#fff").submit();
+}
+$(document).ready(function() {
+    let count = 0; // 初始化计数器
+
+    // 点击添加按钮时增加新组
+    $('#addGroupBtn').click(function() {
+        const newGroup = $(`
+            <div class="generated-group d-flex align-items-center">
+                <input name="cssJsFile[${count}].filePath" placeholder="CSS路径" type="text" class="form-control input-inline">
+                <input name="cssJsFile[${count}].loadOrder" placeholder="加载顺序" type="text" class="form-control input-inline">
+                
+                <select name="cssJsFile[${count}].typeFiles" class="form-select input-inline">
+                    <option value="1">CSS</option>
+                    <option value="2">JS</option>
+                </select>
+                
+                <button class="btn btn-danger btn-sm remove-btn" type="button">删除</button>
+            </div>
+        `);
+
+        // 将新组添加到容器中
+        $('#dynamicContainer').append(newGroup);
+        count++; // 每次添加后增加编号
+    });
+
+    // 使用事件委托来处理删除按钮点击事件
+    $('#dynamicContainer').on('click', '.remove-btn', function() {
+        $(this).closest('.generated-group').remove();
+    });
+});
+</script>
+<script>
+$(document).ready(function() {
+   // 初始化编号
+
+    $('#generateFormBtn').click(function() {
+        const sql = $('#sqlInput').val();
+        const addAttrDiv = $('#add_attr');
+        
+        // 清空之前生成的表单
+        addAttrDiv.empty();
+        let count = 0;
+        // 使用正则解析出列名和备注 (假设列定义为`columnName type COMMENT '备注内容'`)
+        const columnRegex = /`(\w+)`\s+\w+(?:\([\d,]+\))?(?:\s+COMMENT\s+'([^']+)')?/g;
+        let match;
+        
+        while ((match = columnRegex.exec(sql)) !== null) {
+            const columnName = match[1];
+            const comment = match[2] || '';  // 如果没有备注，默认为空字符串
+            const camelCaseName = columnName.replace(/_([a-z])/g, (g) => g[1].toUpperCase()); // 转驼峰命名
+            //components[${count}].databaseName
+            // 生成 HTML 结构，所有字段名带编号
+            if('sta'==columnName || 'id'==columnName){
+            	continue ;
+            }
+            const newElement = $(`
+                <div class="generated-card">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <select name="components[${count}].type" class="form-select generated-select">
+                                <option value="input">输入框 (input)</option>
+                                <option value="textarea">文本域 (textarea)</option>
+                                <option value="select">选择框 (select)</option>
+                                <option value="checkbox">复选框 (checkbox)</option>
+                                <option value="radio">单选框 (radio)</option>
+                            </select>
+
+                            <input name="components[${count}].config" placeholder="配置" type="text" class="form-control generated-input">
+                            <input name="components[${count}].position" placeholder="位置" type="text" value="${count+1}" class="form-control generated-input">
+                            
+                            <select name="components[${count}].inSearchDisplay" class="form-select generated-select">
+                                <option value="1">搜索</option>
+                                <option value="0">否</option>
+                            </select>
+                            <select name="components[${count}].inTableDisplay" class="form-select generated-select">
+                                <option value="1">table</option>
+                                <option value="0">否</option>
+                            </select>
+                            <select name="components[${count}].inInfoPage" class="form-select generated-select">
+                                <option value="1">info</option>
+                                <option value="0">否</option>
+                            </select>
+
+                            <input name="components[${count}].displayName" placeholder="页面名称" type="text" class="form-control generated-input" value="${comment || camelCaseName}">
+                            <input name="components[${count}].databaseName" placeholder="db名称" type="text" class="form-control generated-input" value="${columnName}">
+                            <input name="components[${count}].javaBeanName" placeholder="bean名称" type="text" class="form-control generated-input" value="${camelCaseName}">
+                          
+                            <select name="components[${count}].mandatory" class="form-select generated-select">
+                            <option value="1">非必填 (input)</option>
+                            <option value="2">必填</option>
+                        </select>
+                            <button class="icon-button delete-btn">
+                                <i class="bi bi-trash-fill"></i> 删除
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `);
+
+            // 将新元素添加到生成区域
+            addAttrDiv.append(newElement);
+            count++; // 每次添加后增加编号
+        }
+    });
+
+    // 使用事件委托来处理删除按钮点击事件
+    $('#add_attr').on('click', '.delete-btn', function() {
+        $(this).closest('.generated-card').remove();
+    });
+});
+</script>
+
+</body>
+</html>

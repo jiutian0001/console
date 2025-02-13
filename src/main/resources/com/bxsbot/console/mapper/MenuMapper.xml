@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bxsbot.console.mapper.MenuMapper">
+
+    <!-- 查询所有有效菜单项 -->
+    <select id="getAllMenus" resultType="com.bxsbot.console.bean.Menu">
+        SELECT id, menu_name AS menuName, menu_url AS menuUrl, is_menu AS isMenu, pid, sta
+        FROM menus
+        WHERE sta = 1  <!-- 1 表示启用状态    pid, id -->
+        ORDER BY  menu_sort asc    
+    </select>
+
+</mapper>

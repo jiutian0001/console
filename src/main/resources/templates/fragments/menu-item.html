@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+  <!-- 单个菜单项的递归片段 -->
+  <li class="nav-item">
+    <a href="#" class="nav-link" th:text="${menu.menuName}" data-url="${menu.menuUrl}" 
+       onclick="toggleSubMenu(this)">
+      <i class="bi bi-folder"></i>
+      <i class="bi bi-chevron-down" th:if="${menu.submenus != null && menu.submenus.size() > 0}"></i>
+    </a>
+    <!-- 子菜单递归渲染 -->
+    <ul class="submenu" th:if="${menu.submenus != null && menu.submenus.size() > 0}">
+      <li th:each="subMenu : ${menu.submenus}" th:insert="~{fragments/menu-item :: menuItem(subMenu)}"></li>
+    </ul>
+  </li>
+</body>
+</html>

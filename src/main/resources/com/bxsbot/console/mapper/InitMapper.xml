@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bxsbot.console.mapper.InitMapper">
+
+    <select id="initPage" resultType="com.bxsbot.console.bean.Page">
+      SELECT 
+    id AS id,
+    name AS name,
+    search_url AS searchUrl,
+    add_url AS addUrl,
+    return_page AS returnPage,
+    type AS type,
+    url,
+    pid,
+    sort_field sortField,
+    sort_order sortOrder
+FROM 
+    pages
+    WHERE
+     sta=1 
+    </select>
+    <select id="initCmd" resultType="com.bxsbot.console.bean.Cmds">
+     SELECT 
+    id AS id,
+    cmd_name AS cmdName,
+    cmd_clzz AS cmdClzz,
+    cmd_func AS cmdFunc,
+    cmd_verify AS cmdVerify,
+    sta AS sta,
+    page_id AS pageId,
+    table_name AS tableName,
+    next_cmd nextCmd
+FROM cmds
+	WHERE
+     sta=1
+    </select>
+<!--查询css js -->
+ <select id="initCssJs" resultType="com.bxsbot.console.bean.CssJsFile">
+  SELECT 
+    id AS id,
+    file_path AS filePath,
+    load_order AS loadOrder,
+    identifier AS identifier,
+    page_id AS pageId,
+     type_files AS typeFiles
+FROM 
+    css_js_files
+  WHERE
+     sta=1  
+     
+     ORDER BY load_order ASC
+    </select>
+<!--查询button -->
+  <select id="initButtn" resultType="com.bxsbot.console.bean.Button">
+  SELECT 
+    id AS id,
+    label AS label,
+    action AS action,
+	identifier,
+    page_id AS pageId,
+    js_func AS jsFunc
+FROM 
+    buttons
+    WHERE  sta=1  
+     ORDER BY position ASC
+    </select>
+ <!--查询组件 -->
+  <select id="initComponent" resultType="com.bxsbot.console.bean.Component">
+  SELECT 
+    id AS id,
+    page_id AS pageId,
+    type AS type,
+    config AS config,
+    position AS position,
+    in_search_display AS inSearchDisplay,
+    in_info_page AS inInfoPage,
+    in_table_display AS inTableDisplay,
+    display_name AS displayName,
+    java_bean_name AS javaBeanName,
+    database_name AS databaseName,
+    cp AS cp,
+    mandatory,
+    sta AS sta
+FROM 
+    components
+    WHERE  sta=1  
+     ORDER BY position ASC
+    </select>
+    
+     <select id="initConfig" resultType="com.bxsbot.console.bean.SysConfig">
+  SELECT id,sys_key AS sysKey,sys_code AS sysCode,sys_name AS sysName,sys_val AS sysVal FROM `sys_config` WHERE sta=1  
+    </select>
+      <select id="initExchange" resultType="com.bxsbot.console.bean.SysConfig">
+  		SELECT id,name AS sysName  FROM exchange WHERE sta=1  
+    </select>
+    
+</mapper>

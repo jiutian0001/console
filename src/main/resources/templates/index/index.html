@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工作台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="min-h-screen p-4">
+        <div class="max-w-7xl mx-auto space-y-4">
+            <!-- 工作计划 -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="p-4 border-b">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-xl font-bold">消息计划</h2>
+                        <a href="/web/msg_ca_list" class="text-blue-600 hover:text-blue-800">查看全部</a>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <div class="flex space-x-4 border-b mb-4">
+                        <th:block th:each="type : ${msgEvent}">
+                            <button th:onclick="'switchTaskType(' + ${type.value.sysCode} + ', document.querySelector(\'[data-type=&quot;' + ${type.value.sysCode} + '&quot;]\'))'"
+							        th:data-type="${type.value.sysCode}"
+							        th:class="${type.value.sysCode == activeTaskType} ? 'text-blue-600 border-b-2 border-blue-600' : ''"
+							        class="pb-2 px-4" 
+							        th:text="${type.value.sysName}">
+							</button>
+                        </th:block>
+                    </div>
+                    <div class="space-y-3" id="taskList">
+                       
+                    </div>
+                </div>
+            </div>
+                      <!-- 二级交易数据 -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="p-4 border-b">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-xl font-bold">二级交易数据</h2>
+                        <a href="#" class="text-blue-600 hover:text-blue-800">查看全部</a>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <div class="flex space-x-4 border-b mb-4">
+                        <button onclick="switchMarketData(1, this)" 
+                                class="text-blue-600 border-b-2 border-blue-600 pb-2 px-4">
+                            成交总价
+                        </button>
+                        <button onclick="switchMarketData(2, this)" 
+                                class="pb-2 px-4">
+                            成交量
+                        </button>
+                        <button onclick="switchMarketData(3, this)" 
+                                class="pb-2 px-4">
+                            价格涨幅
+                        </button>
+                    </div>
+                    <div class="space-y-2" id="marketDataList">
+                        <!-- 数据将通过JavaScript加载 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 网站导航 -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="p-4 border-b">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-xl font-bold">网站导航</h2>
+                        <a href="/web/nav_list" class="text-blue-600 hover:text-blue-800">管理导航</a>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <div class="flex space-x-4 border-b mb-4">
+                        <th:block th:each="type : ${web_nav_type}">
+                            <button th:onclick="'switchSiteType(' + ${type.value.sysCode} + ', document.querySelector(\'[data-site-type=&quot;' + ${type.value.sysCode} + '&quot;]\'))'"
+						        th:data-site-type="${type.value.sysCode}"
+						        th:class="${type.value.sysCode == activeSiteType} ? 'text-blue-600 border-b-2 border-blue-600' : ''"
+						        class="pb-2 px-4"
+						        th:text="${type.value.sysName}">
+						</button>
+                        </th:block>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3" id="siteList">
+                        <th:block th:each="site : ${sites}">
+                            <a th:href="${site.url}" class="p-3 border rounded hover:bg-gray-50">
+                                <div class="font-medium" th:text="${site.name}"></div>
+                                <div class="text-sm text-gray-500" th:text="${site.description}"></div>
+                            </a>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let activeTaskButton = null;
+        let activeSiteButton = null;
+
+        function switchTaskType(typeCode, button) {
+            // 先恢复所有按钮样式
+            const allTaskButtons = button.parentElement.querySelectorAll('button');
+            allTaskButtons.forEach(btn => {
+                btn.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+            });
+            
+            // 设置当前按钮样式
+            button.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+            activeTaskButton = button;
+
+            const taskList = document.getElementById('taskList');
+            taskList.innerHTML = '<div class="text-center py-4">加载中...</div>';
+
+            fetch(`/get/index/data?type=1&code=${typeCode}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        taskList.innerHTML = '<div class="text-center py-4 text-gray-500">暂无数据</div>';
+                        return;
+                    }
+                    const sortedData = data.sort((a, b) => b.msgSort - a.msgSort);
+                    taskList.innerHTML = sortedData.map(task => `
+                        <div onclick="window.location.href='/web/msg_ca_list?id=${task.id}'" 
+                             class="border rounded p-3 hover:bg-gray-50 cursor-pointer transform transition duration-150 hover:scale-[1.01]">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="font-medium">${task.title}</div>
+                                    <div class="flex items-center mt-1">
+                                        <div class="text-yellow-400">
+                                            ${'★'.repeat(task.msgSort)}${'☆'.repeat(5-task.msgSort)}
+                                        </div>
+                                        <div class="text-sm text-gray-500 ml-2">
+                                            ${new Date(task.mssTime).toLocaleDateString()}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-sm text-gray-400">#${task.id}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                })
+                .catch(() => {
+                    taskList.innerHTML = '<div class="text-center py-4 text-red-500">加载失败，请稍后重试</div>';
+                });
+        }
+
+        function switchSiteType(typeCode, button) {
+            // 先恢复所有按钮样式
+            const allSiteButtons = button.parentElement.querySelectorAll('button');
+            allSiteButtons.forEach(btn => {
+                btn.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+            });
+            
+            // 设置当前按钮样式
+            button.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+            activeSiteButton = button;
+
+            const siteList = document.getElementById('siteList');
+            siteList.innerHTML = '<div class="text-center py-4">加载中...</div>';
+
+            fetch(`/get/index/data?type=3&code=${typeCode}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        siteList.innerHTML = '<div class="text-center py-4 text-gray-500">暂无数据</div>';
+                        return;
+                    }
+                    siteList.innerHTML = data.map(site => `
+                        <div onclick="window.open('${site.webUrl}', '_blank') "
+                             class="p-3 border rounded hover:bg-gray-50 cursor-pointer transform transition duration-150 hover:scale-[1.01] hover:shadow-sm">
+                            <div class="font-medium">${site.webName}</div>
+                            <div class="text-sm text-gray-500 truncate">${site.webUrl}</div>
+                        </div>
+                    `).join('');
+                })
+                .catch(() => {
+                    siteList.innerHTML = '<div class="text-center py-4 text-red-500">加载失败，请稍后重试</div>';
+                });
+        }
+        function switchMarketData(type, button) {
+            // 恢复所有按钮样式
+            const allButtons = button.parentElement.querySelectorAll('button');
+            allButtons.forEach(btn => {
+                btn.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+            });
+            
+            // 设置当前按钮样式
+            button.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+
+            const marketDataList = document.getElementById('marketDataList');
+            marketDataList.innerHTML = '<div class="text-center py-4">加载中...</div>';
+
+            fetch(`/get/index/data?type=2&code=${type}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        marketDataList.innerHTML = '<div class="text-center py-4 text-gray-500">暂无数据</div>';
+                        return;
+                    }
+                    marketDataList.innerHTML = data.map((item, index) => `
+                        <div class="flex items-center justify-between p-3 hover:bg-gray-50 border rounded">
+                            <div class="flex items-center">
+                                <span class="text-gray-500 w-8">#${index + 1}</span>
+                                <div>
+                                    <span class="font-medium">${item.symbol}</span>
+                                    <span class="ml-2 text-sm text-gray-500">${item.name || ''}</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                ${type === 1 ? `<span class="text-gray-700">${item.totalPrice || ''}</span>` : ''}
+                                ${type === 2 ? `<span class="text-gray-700">${item.volume || ''}</span>` : ''}
+                                <span class="${item.priceChange?.startsWith('+') ? 'text-green-500' : 'text-red-500'}">
+                                    ${item.priceChange || ''}
+                                </span>
+                            </div>
+                        </div>
+                    `).join('');
+                })
+                .catch(() => {
+                    marketDataList.innerHTML = '<div class="text-center py-4 text-red-500">加载失败，请稍后重试</div>';
+                });
+        }
+
+        // 初始加载
+        document.addEventListener('DOMContentLoaded', function() {
+            const firstTaskType = document.querySelector('[data-type]');
+            const firstSiteType = document.querySelector('[data-site-type]');
+            const firstMarketButton = document.querySelector('#marketDataList').parentElement.querySelector('button');
+            
+            if (firstTaskType) {
+                switchTaskType(firstTaskType.dataset.type, firstTaskType);
+            }
+            
+            if (firstSiteType) {
+                switchSiteType(firstSiteType.dataset.siteType, firstSiteType);
+            }
+
+            if (firstMarketButton) {
+                switchMarketData(1, firstMarketButton);
+            }
+        });
+    </script>
+</body>
+</html>

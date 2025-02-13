@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bxsbot.console.mapper.IndexDataMapper">
+
+ 
+      <select id="getMsgByEvent" resultType="map">
+  		SELECT id,mss_time AS mssTime,title,msg_sort AS msgSort FROM `msg_ca` WHERE sta=1 AND msg_event=#{code} AND mss_time >=#{time}  
+  		ORDER BY mss_time  asc LIMIT 0,10
+    </select>
+    
+    <select id="getWebNav" resultType="map">
+  		SELECT  id,web_name AS webName,web_url webUrl FROM `web_nav` WHERE sta=1 AND web_nav_type=#{code} 
+  		 LIMIT 0,30
+    </select>
+    
+</mapper>

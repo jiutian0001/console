@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>详情页面 - 动态组件</title>
+<link href="/css/bootstrap.min.css" rel="stylesheet" >
+  <style>
+    body {
+      background-color: #f9f9f9;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+    }
+    .card {
+      margin-bottom: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+    }
+    .card-header {
+      background: #4b6cb7;
+      color: #fff;
+      font-weight: bold;
+    }
+    .image-preview {
+      width: 100%;
+      max-width: 150px;
+      height: auto;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>详情页面</h2>
+  </div>
+
+  <div class="card">
+    <div class="card-header">基本信息</div>
+    <div class="card-body">
+      <form id="mainForm" action="/submit" method="post">
+        <!-- 动态生成不同类型的组件 -->
+        <div >
+          <div class="row mb-3">
+            <label></label>
+            <div class="col-sm-9">
+
+              <!-- 根据组件类型选择显示 -->
+              <div >
+
+
+                <!-- 文件上传（图片） -->
+                <div >
+                  <input class="form-control mt-2" type="file" id="file" name="file" required>
+                   <button class="btn btn-outline-secondary mt-2" type="button" id="uploadBtn">上传</button>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div id="uploadResult">
+  
+  </div>
+<!--   <div class="d-flex justify-content-end">
+    <button class="btn btn-success me-2"  type="button"  onclick="submit()">保存</button>
+    <button class="btn btn-secondary" onclick="window.history.back()">返回</button>
+  </div> -->
+</div>
+ <script>
+        document.getElementById('uploadBtn').addEventListener('click', function () {
+            const fileInput = document.getElementById('file');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('Please select a file!');
+                return;
+            }
+
+            // 创建FormData对象
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // 使用Fetch API上传文件
+            fetch('/api/upload/file', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 文件上传成功，获取返回的文件路径
+                    var str='<input class="form-control mt-2" type="text" value="'+data.filePath+'"><textarea  class="form-control mt-2" rows="" cols="">'+data.works+'</textarea>';
+                    document.getElementById('uploadResult').innerHTML =str;
+                } else {
+                    document.getElementById('uploadResult').innerText = 'File upload failed!';
+                    alert('File upload failed!');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('uploadResult').innerText = 'Error uploading file!';
+                alert('Error uploading file!');
+            });
+        });
+
+        // 你可以在这里使用表单提交事件，手动提交表单
+   /*      document.getElementById('mainForm').addEventListener('submit', function (e) {
+            // 在此处你可以确保filePath已经设置好
+            console.log('Submitting form with file path:', document.getElementById('filePath').value);
+        }); */
+    </script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bxsbot.console.mapper.PageMapper">
+
+  <insert id="savePage" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO pages (
+        url, 
+        name, 
+        search_url, 
+        add_url, 
+        return_page, 
+        type, 
+        pid 
+    ) VALUES (
+        #{url}, 
+        #{name}, 
+        #{searchUrl}, 
+        #{addUrl}, 
+        #{returnPage}, 
+        #{type}, 
+        #{pid} 
+    )
+</insert>
+
+<insert id="batchInsertCssJsFiles" parameterType="java.util.List" >
+    INSERT INTO css_js_files (
+        file_path, 
+        load_order, 
+        identifier, 
+        page_id, 
+        type_files, 
+        sta
+    ) VALUES 
+    <foreach collection="list" item="item" separator=",">
+        (
+            #{item.filePath}, 
+            #{item.loadOrder}, 
+            #{item.identifier}, 
+            #{item.pageId}, 
+            #{item.typeFiles}, 
+            #{item.sta}
+        )
+    </foreach>
+</insert>
+<insert id="batchInsertComponents" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO components (
+        page_id,
+        type,
+        position,
+        in_search_display,
+        in_info_page,
+        in_table_display,
+        display_name,
+        java_bean_name,
+        database_name,
+        config,
+        mandatory
+    ) VALUES 
+    <foreach collection="list" item="item" separator=",">
+        (
+            #{item.pageId},
+            #{item.type},
+            #{item.position},
+            #{item.inSearchDisplay},
+            #{item.inInfoPage},
+            #{item.inTableDisplay},
+            #{item.displayName},
+            #{item.javaBeanName},
+            #{item.databaseName},
+            #{item.config},
+            #{item.mandatory}
+        )
+    </foreach>
+</insert>
+<insert id="saveCmd" parameterType="com.bxsbot.console.bean.Cmds" >
+    INSERT INTO cmds (
+        cmd_name,cmd_clzz,cmd_func,page_id,table_name 
+    ) VALUES 
+        (
+            #{cmdName}, 
+            #{cmdClzz}, 
+            #{cmdFunc}, 
+            #{pageId}, 
+            #{tableName}
+        )
+</insert>
+</mapper>

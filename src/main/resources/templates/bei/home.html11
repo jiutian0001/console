@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>后台管理系统 - 动态菜单</title>
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+  <style>
+    body {
+      background: linear-gradient(to bottom right, #e3f2fd, #f1f8ff);
+      font-family: Arial, sans-serif;
+      color: #444;
+    }
+    .sidebar {
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 200px;
+      background: linear-gradient(135deg, #4b6cb7, #182848);
+      color: #fff;
+      padding-top: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    .sidebar h4 {
+      text-align: center;
+      font-weight: bold;
+      color: #ffeb3b;
+      margin-bottom: 30px;
+    }
+    .sidebar .nav-link {
+      color: #fff;
+      font-size: 1.1rem;
+      padding: 12px 20px;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: background 0.3s, color 0.3s;
+      cursor: pointer;
+    }
+    .sidebar .nav-link:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffeb3b;
+    }
+    /* 子菜单样式 */
+    .submenu {
+      list-style: none;
+      padding-left: 20px;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+    }
+    .submenu.show {
+      max-height: 500px; /* 最大高度根据子菜单项数量调整 */
+    }
+    .submenu .nav-link {
+      font-size: 0.95rem;
+      color: #ddd;
+      padding: 8px 0 8px 25px;
+      transition: color 0.3s;
+    }
+    .submenu .nav-link:hover {
+      color: #ffeb3b;
+    }
+    /* iframe 样式 */
+    .content iframe {
+      width: 100%;
+      height: 100vh;
+      border: none;
+    }
+    .content {
+      margin-left: 200px;
+      padding: 0;
+    }
+     /* 底部菜单项样式 */
+    .sidebar-footer {
+      padding-bottom: 150px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="sidebar">
+  <h4>管理系统</h4>
+  <ul class="nav flex-column" id="menuList">
+    <!-- Thymeleaf 循环生成菜单 -->
+    <li th:each="menu : ${menus}" class="nav-item">
+      <a href="#" class="nav-link" th:text="${menu.menuName}" th:data-url="${menu.menuUrl}" onclick="toggleSubMenu(this)">
+        <i class="bi bi-folder"></i> 
+        <i class="bi bi-chevron-down"></i>
+      </a>
+      <!-- 子菜单 -->
+      <ul th:if="${menu.submenus.size() > 0}" class="submenu">
+        <li th:each="sub : ${menu.submenus}" class="nav-item">
+          <a href="#" class="nav-link" th:text="${sub.menuName}" th:data-url="${sub.menuUrl}" onclick="loadContent(this)"></a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+   
+</div>
+
+<div class="content">
+  <iframe id="contentFrame" src="/1.html"></iframe>
+</div>
+
+<script>
+  // 切换子菜单显示/隐藏
+  function toggleSubMenu(element) {
+    const submenu = element.nextElementSibling;
+    if (submenu) {
+      submenu.classList.toggle("show");
+    }
+  }
+
+  // 加载指定的内容到 iframe 中
+  function loadContent(element) {
+    const url = element.getAttribute("data-url");
+    document.getElementById("contentFrame").src = url;
+  }
+</script>
+
+</body>
+</html>

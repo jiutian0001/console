@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bxsbot.console.mapper.TjMapper">
+<sql id="ccdb">
+ <if test="baseCoin != null">
+        AND base_coin = #{baseCoin}
+    </if>
+    <if test="exchangeId != null">
+        AND exchange_id = #{exchangeId}
+    </if>
+    <if test="startTime != null">
+        AND start_time >= #{startTime}
+    </if>
+    <if test="endTime != null">
+        AND end_time   <![CDATA[ <=  ]]> #{endTime}
+    </if>
+    <if test="type != null">
+        AND type = #{type}
+    </if>
+    <if test="id != null">
+        AND id = #{id}
+    </if>
+    <if test="sta != null">
+        AND sta = #{sta}
+    </if>
+</sql>
+
+<select id="selectByPage" resultType="java.util.Map">
+SELECT 
+    id AS id,
+    base_coin AS baseCoin,
+    exchange_id AS exchangeId,
+    start_time AS startTime,
+    end_time AS endTime,
+    type AS type,
+    open_price AS openPrice,
+    close_price AS closePrice,
+    high_price AS highPrice,
+    low_price AS lowPrice,
+    buy_volume AS buyVolume,
+    sell_volume AS sellVolume,
+    buy_sell_ratio AS buySellRatio,
+    total_volume AS totalVolume,
+    total_price AS totalPrice,
+    resistance_level AS resistanceLevel,
+    support_level AS supportLevel,
+    price_change_percentage AS priceChangePercentage,
+    vol1 AS vol1,
+    vol2 AS vol2,
+    vol3 AS vol3,
+    pr1 AS pr1,
+    pr2 AS pr2,
+    pr3 AS pr3,
+    sta AS sta
+FROM statistics
+WHERE 1=1
+ <include refid="ccdb"></include>
+  <!--  order by  -->
+  ORDER BY ${cc} ${cca}
+   LIMIT  #{st} ,#{pageSize}
+</select>
+ <select id="selectByPage1" resultType="java.util.Map">
+    SELECT 
+        id AS id,
+        base_coin AS baseCoin,
+        exchange_id AS exchangeId,
+        CASE 
+            WHEN type = '1h' THEN DATE_FORMAT(start_time, '%H')
+            ELSE DATE_FORMAT(start_time, '%m-%d')
+        END AS startTime,
+        CASE 
+            WHEN type = '1h' THEN DATE_FORMAT(end_time, '%H')
+            ELSE DATE_FORMAT(end_time, '%m-%d')
+        END AS endTime,
+        type AS type,
+        ROUND(open_price, 2) AS openPrice,
+        ROUND(close_price, 4) AS closePrice,
+        ROUND(high_price, 2) AS highPrice,
+        ROUND(low_price, 2) AS lowPrice,
+        CASE 
+            WHEN buy_volume >= 100000000 THEN CONCAT(ROUND(buy_volume / 100000000, 4), '亿')
+            WHEN buy_volume >= 1000000 THEN CONCAT(ROUND(buy_volume / 1000000, 4), 'M')
+            ELSE CONCAT(ROUND(buy_volume / 1000, 4), 'K')
+        END AS buyVolume,
+        CASE 
+            WHEN sell_volume >= 100000000 THEN CONCAT(ROUND(sell_volume / 100000000, 4), '亿')
+            WHEN sell_volume >= 1000000 THEN CONCAT(ROUND(sell_volume / 1000000, 4), 'M')
+            ELSE CONCAT(ROUND(sell_volume / 1000, 4), 'K')
+        END AS sellVolume,
+        ROUND(buy_sell_ratio, 2) AS buySellRatio,
+        CASE 
+            WHEN total_volume >= 100000000 THEN CONCAT(ROUND(total_volume / 100000000, 4), '亿')
+            WHEN total_volume >= 1000000 THEN CONCAT(ROUND(total_volume / 1000000, 4), 'M')
+            ELSE CONCAT(ROUND(total_volume / 1000, 4), 'K')
+        END AS totalVolume,
+        CASE 
+            WHEN total_price >= 100000000 THEN CONCAT(ROUND(total_price / 100000000, 4), '亿')
+            WHEN total_price >= 1000000 THEN CONCAT(ROUND(total_price / 1000000, 4), 'M')
+            ELSE CONCAT(ROUND(total_price / 1000, 4), 'K')
+        END AS totalPrice,
+        ROUND(resistance_level, 2) AS resistanceLevel,
+        ROUND(support_level, 2) AS supportLevel,
+         CONCAT(ROUND(price_change_percentage * 100, 2), '%') AS priceChangePercentage,
+        CONCAT(ROUND(vol1 * 100, 2), '%') AS vol1,
+        CONCAT(ROUND(vol2 * 100, 2), '%') AS vol2,
+        CONCAT(ROUND(vol3 * 100, 2), '%') AS vol3,
+        CONCAT(ROUND(pr1 * 100, 2), '%') AS pr1,
+        CONCAT(ROUND(pr2 * 100, 2), '%') AS pr2,
+        CONCAT(ROUND(pr3 * 100, 2), '%') AS pr3,
+        sta AS sta
+    FROM statistics
+    WHERE 1=1
+    <include refid="ccdb"></include>
+  <!--  order by  -->
+  ORDER BY ${cc} ${cca}
+   LIMIT  #{st} ,#{pageSize}
+   
+ 
+</select>
+<select id="getTotalNum" resultType="java.lang.Integer">
+    SELECT COUNT(1) FROM `statistics`  WHERE 1=1
+    <include refid="ccdb"></include>
+</select>
+       
+</mapper>
