@@ -108,6 +108,8 @@ public class TjService {
             formatPercentage(row, "pr1");
             formatPercentage(row, "pr2");
             formatPercentage(row, "pr3");
+            //格式化日期 只要日
+            formatDate(row,"startTime");
         }
     }
 
@@ -148,5 +150,18 @@ public class TjService {
                 .setScale(2, RoundingMode.HALF_UP).toString() + "%";
             row.put(key, result);
         }
+    }
+    private void formatDate(Map<String, Object> row, String key) {
+    	 Object value = row.get(key);
+    	 String[] dates=null;
+    	 String[] days=null;
+    	 if (value != null) {
+    		 	dates=value.toString().split(" ");
+    		 if(2==dates.length) {
+    			 days=dates[0].split("-");
+    			 row.put(key, days[2]);
+    		 }
+    	 }
+    	
     }
 }
