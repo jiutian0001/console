@@ -155,11 +155,17 @@ public class TjService {
     	 Object value = row.get(key);
     	 String[] dates=null;
     	 String[] days=null;
+    	 String day=null;
+    	 int index=0;
     	 if (value != null) {
     		 	dates=value.toString().split(" ");
     		 if(2==dates.length) {
     			 days=dates[0].split("-");
     			 row.put(key, days[2]);
+    		 }else {
+    			 day=dates[0];
+    			 index=day.lastIndexOf("-");
+    			 row.put(key,day.substring( index+1,index+3));
     		 }
     	 }
     	
