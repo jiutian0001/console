@@ -170,4 +170,20 @@ public class TjService {
     	 }
     	
     }
+
+	public List selectByPageIndex(Map<String, Object> map) {
+		setQueryParams(map);
+		List<Map<String,Object>> selectByPageIndex = tj.selectByPageIndex(map);
+		for (Map<String, Object> map2 : selectByPageIndex) {
+			formatVolume(map2, "totalPrice");
+			formatPercentage(map2, "priceChangePercentage");
+			formatPercentage(map2, "vol1");
+			formatPercentage(map2, "vol2");
+			formatPercentage(map2, "pr1");
+			formatPercentage(map2, "pr2");
+			formatPercentage(map2, "pr3");
+		}
+		
+		return selectByPageIndex;
+	}
 }

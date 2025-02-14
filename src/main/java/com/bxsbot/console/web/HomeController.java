@@ -93,6 +93,7 @@ public class HomeController {
     		return indexDataService.getMsg(code);
     	}else if (2==type) {
 			//查询二级数据
+    		return indexDataService.getData(code);
 		}else if (3==type) {
 			//查询web导航
 			return indexDataService.getWebNav(code);

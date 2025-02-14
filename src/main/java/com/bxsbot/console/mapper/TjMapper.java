@@ -9,4 +9,6 @@ public interface TjMapper {
 
 	Integer getTotalNum(Map<String, Object> webpa);
 
+	List selectByPageIndex(Map<String, Object> map);
+
 }

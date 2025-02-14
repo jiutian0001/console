@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>工作台</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style type="text/css">
+    .cs2{
+    	width: 150px
+    }
+    </style>
 </head>
 <body class="bg-gray-100">
     <div class="min-h-screen p-4">
@@ -45,16 +50,17 @@
                     <div class="flex space-x-4 border-b mb-4">
                         <button onclick="switchMarketData(1, this)" 
                                 class="text-blue-600 border-b-2 border-blue-600 pb-2 px-4">
-                            成交总价
+                           成交额
                         </button>
                         <button onclick="switchMarketData(2, this)" 
                                 class="pb-2 px-4">
-                            成交量
+                            vol1
                         </button>
                         <button onclick="switchMarketData(3, this)" 
                                 class="pb-2 px-4">
                             价格涨幅
                         </button>
+                        
                     </div>
                     <div class="space-y-2" id="marketDataList">
                         <!-- 数据将通过JavaScript加载 -->
@@ -203,16 +209,23 @@
                             <div class="flex items-center">
                                 <span class="text-gray-500 w-8">#${index + 1}</span>
                                 <div>
-                                    <span class="font-medium">${item.symbol}</span>
+                                    <span class="font-medium">${item.baseCoin}</span>
                                     <span class="ml-2 text-sm text-gray-500">${item.name || ''}</span>
                                 </div>
                             </div>
                             <div class="flex items-center space-x-4">
                                 ${type === 1 ? `<span class="text-gray-700">${item.totalPrice || ''}</span>` : ''}
-                                ${type === 2 ? `<span class="text-gray-700">${item.volume || ''}</span>` : ''}
-                                <span class="${item.priceChange?.startsWith('+') ? 'text-green-500' : 'text-red-500'}">
-                                    ${item.priceChange || ''}
+                                
+                                ${type === 2  ?``: ''}
+                                <div class="cs2">
+                                今日涨幅:<span class="${item.priceChangePercentage?.startsWith('-') ? 'text-red-500' : 'text-green-500'}">
+                                    ${item.priceChangePercentage || ''}
                                 </span>
+                                </div>
+                                <div class="cs2">vol1:<span class="text-gray-700">${item.vol1 || ''}</span></div>
+                        		<div class="cs2">vol2:<span class="text-gray-700">${item.vol2  || ''}</span></div>
+                        		<div class="cs2">pr2:<span class="text-gray-700">${item.pr2  || ''}</span></div>
+                        		<div class="cs2">pr3:<span class="text-gray-700">${item.pr3  || ''}</span></div>
                             </div>
                         </div>
                     `).join('');
