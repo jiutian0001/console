@@ -12,7 +12,7 @@
         AND start_time >= #{startTime}
     </if>
     <if test="endTime != null">
-        AND end_time   <![CDATA[ <=  ]]> #{endTime}
+        AND start_time   <![CDATA[ <  ]]> #{endTime}
     </if>
     <if test="type != null">
         AND type = #{type}
