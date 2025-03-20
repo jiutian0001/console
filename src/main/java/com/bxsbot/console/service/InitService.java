@@ -31,10 +31,15 @@ public class InitService {
 		initButtn();
 		initComponents();
 		initExchange();
+		initAutoLm();
 	
 	}
 
 	
+
+
+
+
 
 	private void initCinfig() {
 		CacheMaps.sysConfig.clear();
@@ -195,6 +200,16 @@ public class InitService {
 				map.put(sysConfig.getSysCode(),sysConfig);
 			}
 			 CacheMaps.sysConfig.put("init_exchanges",map);
+		}
+	}
+	private void initAutoLm() {
+		List<SysConfig>  list=init.initAutoLm();
+		if(null!=list) {
+			Map<Integer, SysConfig> map=new ConcurrentHashMap<Integer, SysConfig>();
+			for (SysConfig sysConfig : list) {
+				map.put(sysConfig.getSysCode(), sysConfig);
+			}
+			 CacheMaps.sysConfig.put("init_auto_id", map);
 		}
 		
 	}

@@ -13,4 +13,23 @@
   		 LIMIT 0,30
     </select>
     
+ <!--       <select id="getAutoConfig" resultType="com.bxsbot.console.bean.AutoLm">
+  		SELECT id,run_clas AS runClas,files FROM `auto_lm` WHERE sta=1 AND id=#{id}
+    </select>
+    <select id="getLmItem" resultType="com.bxsbot.console.bean.LmItem">
+  		 SELECT
+        id AS id,
+        lm_id AS lmId,
+        item_name AS itemName,
+        item_type AS itemType,
+        item_val AS itemVal,
+        operation AS operation,
+        item_sort AS itemSort,
+        operation_type AS operationType,
+        op_type_fun AS opTypeFun,
+        sta AS sta
+    FROM lm_item
+    WHERE sta = 1 AND lm_id = #{aid}
+    order by item_sort ASC
+    </select> -->
 </mapper>

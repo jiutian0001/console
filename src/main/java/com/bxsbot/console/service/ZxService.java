@@ -12,6 +12,7 @@ import com.bxsbot.console.bean.Page;
 import com.bxsbot.console.bean.ReturnPage;
 import com.bxsbot.console.bean.ZiXun;
 import com.bxsbot.console.dao.CommonDao;
+import com.bxsbot.console.mapper.UtilMapper;
 import com.bxsbot.console.utils.MapUtils;
 import com.bxsbot.console.utils.PageUtils;
 
@@ -19,9 +20,10 @@ import com.bxsbot.console.utils.PageUtils;
 public class ZxService {
 	 @Autowired
 		private CommonDao commonDao;
+	// @Autowired
+	// private MongoService mongoService;
 	 @Autowired
-	 private MongoService mongoService;
-	 
+	 private UtilMapper utilMapper;
 	 /***
 		 * 列表
 		 * @param parameterMap
@@ -61,7 +63,7 @@ public class ZxService {
 				commonDao.findBySearch(webpa, rp);
 				Map dbmap=(Map) rp.getVal().get("map");
 				if(dbmap.containsKey("id")) {
-					ZiXun zxText = mongoService.findById((Integer)dbmap.get("id"));
+					ZiXun zxText = utilMapper.selectZxTextById((Integer)dbmap.get("id"));
 					if(null!=zxText) {
 						rp.getVal().put("zx_text", zxText.getText());
 					}
@@ -92,15 +94,15 @@ public class ZxService {
 					 commonDao.save(webpa,rp);
 					 BigInteger bi =(BigInteger) webpa.get("id");
 					if(null!=bi) {
-						mongoService.insert(new ZiXun( bi.intValue(), text));
+						utilMapper.saveZxText(new ZiXun( bi.intValue(), text));
 					}
 				}else {
 					commonDao.update(webpa,rp);
-					ZiXun tid = mongoService.findById(id);
+					ZiXun tid = utilMapper.selectZxTextById(id);
 					if(null==tid) {
-						mongoService.insert(new ZiXun( id, text));
+						utilMapper.saveZxText(new ZiXun( id, text));
 					}else {
-						mongoService.updateById(new ZiXun(id, text));
+						utilMapper.updateZxTextById(new ZiXun(id, text));
 					}
 					
 				}

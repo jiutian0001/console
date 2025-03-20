@@ -25,4 +25,6 @@ public interface InitMapper {
 
 	List<SysConfig> initExchange();
 
+	List<SysConfig> initAutoLm();
+
 }

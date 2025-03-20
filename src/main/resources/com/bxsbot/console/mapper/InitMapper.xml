@@ -94,4 +94,8 @@ FROM
   		SELECT id,name AS sysName  FROM exchange WHERE sta=1  
     </select>
     
+   <select id="initAutoLm" resultType="com.bxsbot.console.bean.SysConfig">
+  		SELECT id AS sysCode,name AS sysName  FROM `auto_lm` WHERE sta=1 
+    </select> 
+    
 </mapper>
