@@ -12,4 +12,8 @@
       INSERT INTO `zx_text` (id,zx_text) VALUES (#{id},#{text})
    </insert>
    
+   <insert id="saveLMPause" >
+   INSERT INTO `lm_item` (lm_id,item_name,item_type,item_val,item_sort,sta) VALUES(#{lmId},#{itemName},2,#{s},#{itemSort},1)
+   </insert>
+   
 </mapper>

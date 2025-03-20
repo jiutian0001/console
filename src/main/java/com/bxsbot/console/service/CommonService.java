@@ -59,7 +59,10 @@ public class CommonService {
 			PageUtils.setInfo(pageId, rp);
 			//String tableName=MapUtils.getValueStr(rp.getVal(), "tableName");
 			//webpa.put("tableName", tableName);
-			
+			Integer sta=MapUtils.getValueInt(webpa, "sta");
+			if(null==sta) {
+				webpa.put("sta", 1);
+			}
 			commonDao.selectByPage(webpa, rp);
 		}
 	}

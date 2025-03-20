@@ -15,4 +15,13 @@ public interface UtilMapper {
 
 	void updateZxTextById(ZiXun ziXun);
 
+	/***
+	 * 添加暂停几秒
+	 * @param pause 
+	 * @param itemSort 
+	 * @param lmId 
+	 * @param pause
+	 */
+	void saveLMPause(@Param("itemName")String itemName, @Param("itemSort")Integer itemSort, @Param("s")Integer s, @Param("lmId")Integer lmId);
+
 }

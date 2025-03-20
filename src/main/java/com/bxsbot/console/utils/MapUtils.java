@@ -22,11 +22,18 @@ public class MapUtils {
 		return null;
 	}
 	 public static Integer getValueInt(Map<String, Object> map, String key) {
-		 String val=getValueStr(map, key);
-		 if(null!=val) {
-			  return Integer.parseInt(val); 
-		 }
-	        return null; // 或者抛出异常，根据需要
+		 Object value = map.get(key);
+	        if (value == null) {
+	            return null;
+	        }
+	        if (value instanceof Integer) {
+	            return (Integer) value;
+	        }
+	        try {
+	            return Integer.parseInt(String.valueOf(value));
+	        } catch (NumberFormatException e) {
+	            return null;
+	        }
 	    }
 	 // 将单个 Map 转换为 JavaBean
 	    public static <T> T mapToBean(Map<String, Object> map, Class<T> beanClass) {
