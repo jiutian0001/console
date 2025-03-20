@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bxsbot.console.mapper.UtilMapper">
+
+    <select id="selectZxTextById" resultType="com.bxsbot.console.bean.ZiXun" >
+       SELECT id,zx_text AS text FROM zx_text WHERE  id=#{id}
+    </select>
+   <update id="updateZxTextById">
+       UPDATE `zx_text` SET zx_text=#{text} WHERE id=#{id}
+   </update>
+   <insert id="saveZxText" >
+      INSERT INTO `zx_text` (id,zx_text) VALUES (#{id},#{text})
+   </insert>
+   
+</mapper>

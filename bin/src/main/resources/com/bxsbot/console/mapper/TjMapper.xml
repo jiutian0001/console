@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bxsbot.console.mapper.TjMapper">
+<sql id="ccdb">
+ <if test="baseCoin != null">
+        AND base_coin = #{baseCoin}
+    </if>
+    <if test="exchangeId != null">
+        AND exchange_id = #{exchangeId}
+    </if>
+    <if test="startTime != null">
+        AND start_time >= #{startTime}
+    </if>
+    <if test="endTime != null">
+        AND start_time   <![CDATA[ <  ]]> #{endTime}
+    </if>
+    <if test="type != null">
+        AND type = #{type}
+    </if>
+    <if test="id != null">
+        AND id = #{id}
+    </if>
+    <if test="sta != null">
+        AND sta = #{sta}
+    </if>
+</sql>
+
+<select id="selectByPage" resultType="java.util.Map">
+SELECT 
+    id AS id,
+    base_coin AS baseCoin,
+    exchange_id AS exchangeId,
+    start_time AS startTime,
+    end_time AS endTime,
+    type AS type,
+    open_price AS openPrice,
+    close_price AS closePrice,
+    high_price AS highPrice,
+    low_price AS lowPrice,
+    buy_volume AS buyVolume,
+    sell_volume AS sellVolume,
+    buy_sell_ratio AS buySellRatio,
+    total_volume AS totalVolume,
+    total_price AS totalPrice,
+    resistance_level AS resistanceLevel,
+    support_level AS supportLevel,
+    price_change_percentage AS priceChangePercentage,
+    vol1 AS vol1,
+    vol2 AS vol2,
+    vol3 AS vol3,
+    pr1 AS pr1,
+    pr2 AS pr2,
+    pr3 AS pr3,
+    sta AS sta
+FROM statistics
+WHERE 1=1
+ <include refid="ccdb"></include>
+  <!--  order by  -->
+  ORDER BY ${cc} ${cca}
+   LIMIT  #{st} ,#{pageSize}
+</select>
+ 
+<select id="getTotalNum" resultType="java.lang.Integer">
+    SELECT COUNT(1) FROM `statistics`  WHERE 1=1
+    <include refid="ccdb"></include>
+</select>
+       
+     <select id="selectByPageIndex" resultType="java.util.Map">
+SELECT 
+    id AS id,
+    base_coin AS baseCoin,
+    total_price AS totalPrice,
+    price_change_percentage AS priceChangePercentage,
+    vol1 AS vol1,
+    vol2 AS vol2,
+    pr1 AS pr1,
+    pr2 AS pr2,
+    pr3 AS pr3
+FROM statistics
+WHERE 1=1
+ <include refid="ccdb"></include>
+  <!--  order by  -->
+  ORDER BY ${cc} ${cca}
+   LIMIT  0 ,10
+</select>  
+       
+</mapper>

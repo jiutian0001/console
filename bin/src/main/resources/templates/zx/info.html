@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>详情页面 - 动态组件</title>
+<link th:each="js : ${returnPage.css}"  th:href="${js.filePath}" rel="stylesheet" >
+  <style>
+    body {
+      background-color: #f9f9f9;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+    }
+    .card {
+      margin-bottom: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+    }
+    .card-header {
+      background: #4b6cb7;
+      color: #fff;
+      font-weight: bold;
+    }
+    .image-preview {
+      width: 100%;
+      max-width: 150px;
+      height: auto;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+ <form id="info_form" th:action="@{/web/{cmd}(cmd=${returnPage.page.addUrl})}" method="post">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>详情页面</h2>
+   <!--  <div>
+      <button class="btn btn-primary me-2" onclick="editDetails()">编辑</button>
+      <button class="btn btn-danger">删除</button>
+      <button class="btn btn-secondary" onclick="window.history.back()">返回</button>
+    </div> -->
+  </div>
+
+  <div class="card">
+  
+    <div class="card-header">基本信息</div>
+    <div class="card-body">
+     
+        <!-- 动态生成不同类型的组件 -->
+        <div th:each="field : ${returnPage.info}">
+          <div class="row mb-3">
+            <label  th:if="${field.type!='hidden'}" th:for="${field.javaBeanName}" th:text="${field.displayName}" class="col-sm-3 col-form-label"></label>
+            <div class="col-sm-9">
+
+              <!-- 根据组件类型选择显示 -->
+              <div th:switch="${field.type}">
+                <!-- 文本框 -->
+                <input th:attr="mandatory=${field.mandatory},mandatoryName=${field.displayName}"  th:case="'input'" type="text" th:name="${field.javaBeanName}" th:id="${field.javaBeanName}" 
+                        class="form-control"  th:value="|${returnPage.val[map][field.javaBeanName]}|">
+
+				<!-- 文本域 -->
+				<textarea th:attr="mandatory=${field.mandatory},mandatoryName=${field.displayName}"  th:case="'textarea'"  th:name="${field.javaBeanName}" th:id="${field.javaBeanName}" 
+                        class="form-control"  th:text="|${returnPage.val[map][field.javaBeanName]}|"  rows="" cols=""></textarea>
+                <!-- 下拉选择框 -->
+                <select th:attr="mandatory=${field.mandatory},mandatoryName=${field.displayName}"  th:case="'select'" th:name="${field.javaBeanName}" th:id="${field.javaBeanName}" class="form-select" >
+                <option value="">请选择</option>
+                  <option th:each="option : ${returnPage.val[field.config]}"  th:value="${option.value.sysCode}" th:text="${option.value.sysName}" th:selected="${option.value.sysCode==returnPage.val[map][field.javaBeanName]}" ></option>
+                </select>
+
+                <!-- 单选按钮 -->
+                <div th:case="'radio'" class="d-flex">
+                 <!--  <div class="form-check me-3" th:each="option : ${field.options}">
+                    <input class="form-check-input" type="radio" th:name="${field.javaBeanName}" th:id="${field.javaBeanName} + '_' + ${option.value}"
+                           th:value="${option.value}" th:checked="${option.value == field.value}" disabled>
+                    <label class="form-check-label" th:for="${field.javaBeanName} + '_' + ${option.value}" th:text="${option.label}"></label>
+                  </div> -->
+                </div>
+
+                <!-- 多选按钮 -->
+                <div th:case="'checkbox'" class="d-flex">
+                  <div class="form-check me-3" th:each="option : ${field.options}">
+                    <!-- <input class="form-check-input" type="checkbox" th:name="${field.javaBeanName}" th:id="${field.javaBeanName} + '_' + ${option.value}"
+                           th:value="${option.value}" th:checked="${field.value.contains(option.value)}" disabled>
+                    <label class="form-check-label" th:for="${field.javaBeanName} + '_' + ${option.value}" th:text="${option.label}"></label> -->
+                  </div>
+                </div>
+
+                <!-- 文件上传（图片） -->
+                <div th:case="'file'">
+                  <img id="imagePreview" th:src="${field.value}" class="image-preview" alt="预览">
+                  <input type="file" class="form-control mt-2" th:id="${field.javaBeanName}" accept="image/*" disabled>
+                  <button type="button" class="btn btn-outline-secondary mt-2" onclick="downloadImage()" disabled>下载</button>
+                </div>
+
+                <!-- 隐藏域 -->
+                <input th:case="'hidden'" type="hidden" th:name="${field.javaBeanName}" th:id="${field.javaBeanName}"  th:value="${returnPage.val[map][field.javaBeanName]}">
+              </div>
+            </div>
+          </div>
+        </div>
+     
+    </div>
+  </div>
+  
+  <div class="card-body">
+ <div >
+          <div class="row mb-3">
+            <div class="col-m-1">
+              <!-- 根据组件类型选择显示 -->
+
+				<!-- 文本域 -->
+				<textarea   style="width: 99%"   th:text="${returnPage.val['zx_text']}" name="zx_text" id="zx_tetx"  
+                          rows="30" cols=""></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+         </form> 
+         </div>
+       
+  <div class="d-flex justify-content-end">
+    <button class="btn btn-success me-2"  type="button"  onclick="submit()">保存</button>
+    <button class="btn btn-secondary" onclick="window.history.back()">返回</button>
+  </div>
+</body>
+<script th:each="js : ${returnPage.js}"  th:src="${js.filePath}"></script>
+<script type="text/javascript">
+function submit(){
+	if(validateForm()){
+	$("#info_form").submit();
+	}
+	
+}
+function validateForm() {
+	var sta=true;
+    const requiredFields = $('[mandatory="2"]').each(function(index) {
+        // 'this' 指的是当前循环中的元素
+        if(!$(this).val()){
+        	alert($(this).attr("mandatoryName")+"不能为空!");
+        	sta= false;
+        	return false;
+        }
+    });
+
+    return sta;
+}
+</script>
+<script type="text/javascript" src="/js/text/rich-text-component.js"></script>
+<script type="text/javascript" src="/js/My97DatePicker/WdatePicker.js"></script>
+<script type="text/javascript">
+// 设置内容
+$(function(){
+	const editor = new RichTextEditor('#zx_tetx', {
+	    height: '400px',
+	    width: '100%',
+	    // 可选的工具栏项目
+	    toolbarItems: ['style', 'text', 'align', 'list', 'image', 'code'],
+	    // 内容变化回调
+	    onChange: (content) => {
+	       // console.log('Content changed:', content);
+	    }
+	    
+	});
+	var str=$("#zx_tetx").text();
+		 editor.setContent(str);
+		 
+		 
+		 $('#zxTime').prop('readonly', true);
+			$('#zxTime').click(function() {
+							showDatePickerOnElement("zxTime");
+			            });
+})
+function showDatePickerOnElement(elementId) {
+    // 获取要应用日期选择器的元素
+    var element = document.getElementById(elementId);
+    
+    if (element) {
+        // 使用 WdatePicker 函数给元素添加日期选择器功能
+        // 这里传递一个配置对象，可以根据需要调整
+        WdatePicker({
+            el: elementId, // 这会直接绑定到ID为elementId的元素
+            dateFmt: 'yyyy-MM-dd', // 日期格式
+            minDate: '%y-%M-%d', // 最小日期（今天）
+            isShowClear: true, // 显示清空按钮
+            isShowToday: true, // 显示今天按钮
+            readOnly: true, // 设置输入框为只读
+            onpicking: function(dp) {
+                // 当选择日期时执行的函数
+                console.log('选中的日期是: ' + dp.cal.getNewDateStr());
+            }
+        });
+    } else {
+        console.error('找不到ID为' + elementId + '的元素');
+    }
+}
+</script>
+</html>

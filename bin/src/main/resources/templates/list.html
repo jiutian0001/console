@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>列表页面 - 检索和分页</title>
+    <link th:each="js : ${returnPage.css}" th:href="${js.filePath}" rel="stylesheet">
+    <style>
+        /* 基础样式 */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f6f9;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        .container-fluid {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        /* 搜索区域样式 */
+        .search-section {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .search-section .form-control {
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 8px 12px;
+            transition: all 0.3s ease;
+        }
+
+        .search-section .form-control:focus {
+            border-color: #3182ce;
+            box-shadow: 0 0 0 2px rgba(49,130,206,0.1);
+            outline: none;
+        }
+
+        /* 结果区域样式 */
+        .result-section {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 表格容器样式 */
+        .table-container {
+            flex: 1;
+            overflow: auto;
+            border-radius: 4px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(0,0,0,0.2) transparent;
+        }
+
+        /* 滚动条样式 */
+        .table-container::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .table-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .table-container::-webkit-scrollbar-thumb {
+            background-color: rgba(0,0,0,0.2);
+            border-radius: 3px;
+            transition: background-color 0.3s;
+        }
+
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(0,0,0,0.3);
+        }
+
+        /* 表格样式 */
+        .table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 0;
+        }
+
+        .table th {
+            background: #f8f9fa;
+            padding: 12px 16px;
+            font-weight: 600;
+            color: #374151;
+            text-align: left;
+            border-bottom: 2px solid #e5e7eb;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+            transition: background-color 0.2s;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        /* 单元格内容样式 */
+       .cell-content {
+    position: relative;
+    max-width: 200px; /* 设置最大宽度 */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+/* 仅在内容溢出时显示提示 */
+.cell-content[data-overflow="true"]:hover::after {
+    content: attr(title);
+    position: absolute;
+    left: 0;
+    top: 100%;
+    background: white;
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    white-space: normal;
+    max-width: 300px;
+    word-wrap: break-word;
+    color: #333;
+    font-size: 14px;
+}
+/*         .cell-content:hover {
+            overflow: visible;
+            white-space: normal;
+            background-color: white;
+            position: absolute;
+            z-index: 1;
+            padding: 8px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+           
+        } */
+
+        /* 按钮样式 */
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background-color: #3182ce;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2c5282;
+        }
+
+        /* 分页容器样式 */
+        .pagination-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .pagination {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .page-item {
+            display: inline-block;
+        }
+
+        .page-link {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            color: #3182ce;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .page-link:hover {
+            background-color: #f7fafc;
+            border-color: #3182ce;
+        }
+
+        .page-item.active .page-link {
+            background-color: #3182ce;
+            color: white;
+            border-color: #3182ce;
+        }
+
+        .page-item.disabled .page-link {
+            color: #a0aec0;
+            pointer-events: none;
+            background-color: #f7fafc;
+        }
+
+        /* 页码选择器样式 */
+        .page-size-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .page-size-selector select {
+            padding: 6px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            background-color: white;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .container-fluid {
+                padding: 10px;
+            }
+
+            .pagination-container {
+                flex-direction: column;
+                gap: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- 搜索区域 -->
+        <div class="search-section">
+            <form id="paginationForm" class="row g-3" method="post" 
+                  th:action="@{/web/{cmd}(cmd=${returnPage.page.searchUrl})}">
+                <input type="hidden" id="currentPage" name="currentPage" 
+                       th:value="${returnPage.val[page].currentPage}">
+                <input type="hidden" id="pageSize" name="pageSize" 
+                       th:value="${returnPage.val[page].pageSize}">
+
+                <!-- 搜索字段 -->
+                <div th:each="field : ${returnPage.search}" class="col-md-1">
+                    <div th:switch="${field.type}">
+                    <input th:case="'hidden'" type="text" 
+                               th:name="${field.javaBeanName}" 
+                               th:id="${field.javaBeanName}"
+                               th:placeholder="${field.displayName}"
+                               th:value="${pageMap[field.javaBeanName]}"
+                               class="form-control">
+                        <input th:case="'input'" type="text" 
+                               th:name="${field.javaBeanName}" 
+                               th:id="${field.javaBeanName}"
+                               th:placeholder="${field.displayName}"
+                               th:value="${pageMap[field.javaBeanName]}"
+                               class="form-control">
+                               
+                        <input th:case="'hidden'" type="hidden"
+                               th:name="${field.javaBeanName}"
+                               th:id="${field.javaBeanName}"
+                               th:value="${pageMap[field.javaBeanName]}">
+                               
+                        <select th:case="'select'"
+                                th:name="${field.javaBeanName}"
+                                th:id="${field.javaBeanName}"
+                                class="form-control">
+                            <option th:text="${field.displayName}" value="">请选择</option>
+                            <option th:each="option : ${returnPage.val[field.config]}"
+                                    th:value="${option.value.sysCode}"
+                                    th:text="${option.value.sysName}"
+                                    th:selected="${option.value.sysCode+''==pageMap[field.javaBeanName]}">
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 按钮区域 -->
+                <div class="col-md-4 d-flex align-items-end">
+                    <div style="margin-right: 10px" th:each="bu : ${returnPage.buttons}">
+                        <div th:if="${bu.action==null}">
+                            <button type="button" class="btn btn-primary" 
+                                    onclick="performSearch()" 
+                                    th:text="${bu.label}">搜索</button>
+                        </div>
+                        <div th:if="${bu.action!=null}">
+                            <a th:if="${bu.pageId==null}" 
+                               class="btn btn-primary"
+                               th:text="${bu.label}"
+                               th:href="@{/web/{cmd}(cmd=${returnPage.page.addUrl})}"></a>
+                            <a th:if="${bu.pageId!=null}"
+                               class="btn btn-primary"
+                               th:text="${bu.label}"
+                               th:href="${bu.action}"></a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- 结果区域 -->
+        <div class="result-section">
+            <div class="table-container">
+                <table id="myTable" class="table">
+                    <thead>
+                        <tr>
+                            <th th:each="column : ${returnPage.table}"
+                                th:text="${column.displayName}">列名</th>
+                            <th style="width: 100px">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="column : ${returnPage.val[list]}">
+                            <th:block th:with="id=${column[id]}">
+                                <td th:each="component : ${returnPage.table}">
+                                    <div class="cell-content">
+                                        <font th:if="${component.config == null || 
+                                                     #strings.length(component.config)==0}"
+                                              th:text="${column[component.javaBeanName]}"></font>
+                                        <font th:if="${component.config != null && 
+                                                     column[component.javaBeanName]!=null && 
+                                                     returnPage.val[component.config] !=null}">
+                                            <font th:if="${#maps.containsKey(returnPage.val[component.config],
+                                                          column[component.javaBeanName])}"
+                                                  th:text="${returnPage.val[component.config]
+                                                  [column[component.javaBeanName]].sysName}"></font>
+                                        </font>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a class="btn btn-primary btn-sm"
+                                       th:href="@{/web/{cmd}(cmd=${returnPage.page.addUrl}, id=${id})}">
+                                       详情
+                                    </a>
+                                </td>
+                            </th:block>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 分页部分 -->
+            <div class="pagination-container">
+                <div class="page-size-selector">
+                    <label for="pageSizeSelect">每页显示：</label>
+                    <select id="pageSizeSelect" onchange="setPageSizeAndSubmit()">
+                        <option th:selected="${returnPage.val[page].pageSize==5}" value="5">5条</option>
+                        <option th:selected="${returnPage.val[page].pageSize==10}" value="10">10条</option>
+                        <option th:selected="${returnPage.val[page].pageSize==15}" value="15">15条</option>
+                        <option th:selected="${returnPage.val[page].pageSize==20}" value="20">20条</option>
+                    </select>
+                </div>
+                
+                <nav aria-label="Page navigation">
+                    <ul class="pagination"></ul>
+                </nav>
+                
+                <div class="page-jump">
+                    <span id="pageInfo" class="me-3"></span>
+                    <div class="input-group">
+                        <input type="number" id="jumpPage" class="form-control" placeholder="跳转页码"
+                               style="width: 100px">
+                        <button class="btn btn-primary" onclick="jumpToPage()">跳转</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 页面脚本 -->
+    <script type="text/javascript">
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // 检查所有单元格内容是否溢出
+        const cells = document.querySelectorAll('.cell-content');
+        cells.forEach(cell => {
+            const content = cell.textContent || '';
+            // 如果内容超过一定长度才添加title和overflow标记
+            if (content.length > 20) {  // 可以调整这个阈值
+                cell.setAttribute('title', content);
+                cell.setAttribute('data-overflow', 'true');
+            }
+        });
+    });
+
+function performSearch(){
+	  document.getElementById('paginationForm').submit();
+}
+//初始化分页数据
+const pageBean = {
+currentPage: [[${returnPage.val[page].currentPage}]],
+pageSize: [[${returnPage.val[page].pageSize}]],
+totalItems: [[${returnPage.val[page].totalItems}]],
+totalPages: [[${returnPage.val[page].totalPages}]]
+};
+
+//初始化分页
+createPagination(pageBean);
+
+//动态生成分页按钮
+function createPagination(pageBean) {
+const pagination = document.querySelector('.pagination');
+pagination.innerHTML = '';
+
+// 首页和上一页按钮
+appendPageButton(pagination, '首页', 1, pageBean.currentPage === 1);
+appendPageButton(pagination, '上一页', pageBean.currentPage - 1, pageBean.currentPage === 1);
+
+// 动态生成中间页码
+const range = getPageRange(pageBean.currentPage, pageBean.totalPages, 3);
+range.forEach(page => {
+  appendPageButton(pagination, page, page, page === pageBean.currentPage);
+});
+
+// 下一页和末页按钮
+appendPageButton(pagination, '下一页', pageBean.currentPage + 1, pageBean.currentPage === pageBean.totalPages);
+appendPageButton(pagination, '末页', pageBean.totalPages, pageBean.currentPage === pageBean.totalPages);
+
+// 更新分页信息
+updatePageInfo(pageBean);
+}
+
+//创建单个分页按钮
+function appendPageButton(container, text, page, disabled) {
+const li = document.createElement('li');
+li.className = `page-item ${disabled ? 'disabled' : ''} ${text === pageBean.currentPage ? 'active' : ''}`;
+
+const a = document.createElement('a');
+a.className = 'page-link';
+a.href = '#';
+a.textContent = text;
+if (!disabled && pageBean.totalPages>0) {
+  a.onclick = (e) => {
+    e.preventDefault();
+    setPageAndSubmit(page);
+  };
+}
+
+li.appendChild(a);
+container.appendChild(li);
+}
+
+//获取页码范围
+function getPageRange(currentPage, totalPages, range) {
+const start = Math.max(1, currentPage - range);
+const end = Math.min(totalPages, currentPage + range);
+return Array.from({ length: end - start + 1 }, (_, i) => i + start);
+}
+
+//更新分页信息
+function updatePageInfo(pageBean) {
+const pageInfo = document.getElementById('pageInfo');
+pageInfo.textContent = `当前第 ${pageBean.currentPage} 页，共 ${pageBean.totalItems} 条记录`;
+}
+
+//跳转到指定页码
+function jumpToPage() {
+const page = parseInt(document.getElementById('jumpPage').value);
+if (page >= 1 && page <= pageBean.totalPages) {
+  setPageAndSubmit(page);
+} else {
+  alert('请输入有效的页码范围！');
+}
+}
+
+//设置页码并提交表单
+function setPageAndSubmit(page) {
+document.getElementById('currentPage').value = page;
+document.getElementById('paginationForm').submit();
+}
+//设置每页条数并提交表单
+function setPageSizeAndSubmit() {
+  const pageSize = document.getElementById('pageSizeSelect').value;
+  document.getElementById('pageSize').value = pageSize;
+  document.getElementById('currentPage').value = 1; // 重置为第一页
+  document.getElementById('paginationForm').submit();
+}
+
+
+
+</script>
+</body>
+</html>
