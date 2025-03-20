@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>详情页面</title>
+    <link th:each="js : ${returnPage.css}" th:href="${js.filePath}" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4b6cb7;
+            --secondary-color: #182848;
+            --background-color: #f8f9fa;
+            --border-radius: 8px;
+            --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            --spacing: 1rem;
+        }
+
+        body {
+            background-color: var(--background-color);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #eee;
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(75, 108, 183, 0.1);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            background-color: white;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .image-preview {
+            max-width: 200px;
+            border-radius: var(--border-radius);
+            border: 1px solid #ddd;
+            padding: 0.25rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 0.5rem;
+            }
+
+            .card-body {
+                padding: 1rem;
+            }
+
+            .form-label {
+                margin-bottom: 0.25rem;
+            }
+        }
+
+        /* Required Field Indicator */
+        .required::after {
+            content: '*';
+            color: #dc3545;
+            margin-left: 4px;
+        }
+
+        /* Form Validation Styles */
+        .is-invalid {
+            border-color: #dc3545;
+        }
+
+        .invalid-feedback {
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+       <!--  <div class="page-header">
+            <h2>详情页面</h2>
+        </div> -->
+
+        <div class="card">
+            <div class="card-header">基本信息</div>
+            <div class="card-body">
+                <form id="info_form" th:action="@{/web/{cmd}(cmd=${returnPage.page.addUrl})}" method="post">
+                    <div th:each="field : ${returnPage.info}">
+                        <div class="form-group" th:unless="${field.type == 'hidden'}">
+                            <label th:if="${field.type != 'hidden'}" 
+                                   th:for="${field.javaBeanName}" 
+                                   th:text="${field.displayName}"
+                                   th:class="${field.mandatory == '2'} ? 'form-label required' : 'form-label'">
+                            </label>
+                            
+                            <div th:switch="${field.type}">
+                                <!-- Text Input -->
+                                <input th:case="'input'" 
+                                       type="text" 
+                                       th:attr="mandatory=${field.mandatory},
+                                               mandatoryName=${field.displayName}"
+                                       th:name="${field.javaBeanName}" 
+                                       th:id="${field.javaBeanName}"
+                                       class="form-control"
+                                       th:value="|${returnPage.val[map][field.javaBeanName]}|">
+
+                                <!-- Textarea -->
+                                <textarea th:case="'textarea'"
+                                          th:attr="mandatory=${field.mandatory},
+                                                  mandatoryName=${field.displayName}"
+                                          th:name="${field.javaBeanName}"
+                                          th:id="${field.javaBeanName}"
+                                          class="form-control"
+                                          th:text="|${returnPage.val[map][field.javaBeanName]}|"
+                                          rows="4">
+                                </textarea>
+
+                                <!-- Select -->
+                                <select th:case="'select'"
+                                        th:attr="mandatory=${field.mandatory},
+                                                mandatoryName=${field.displayName}"
+                                        th:name="${field.javaBeanName}"
+                                        th:id="${field.javaBeanName}"
+                                        class="form-select">
+                                    <option value="">请选择</option>
+                                    <option th:each="option : ${returnPage.val[field.config]}"
+                                            th:value="${option.value.sysCode}"
+                                            th:text="${option.value.sysName}"
+                                            th:selected="${option.value.sysCode==returnPage.val[map][field.javaBeanName]}">
+                                    </option>
+                                </select>
+
+                                <!-- File Upload -->
+                                <div th:case="'file'" class="file-upload">
+                                    <img th:if="${field.value}" 
+                                         id="imagePreview"
+                                         th:src="${field.value}"
+                                         class="image-preview"
+                                         alt="预览">
+                                    <input type="file"
+                                           class="form-control mt-3"
+                                           th:id="${field.javaBeanName}"
+                                           accept="image/*">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Hidden Input -->
+                        <input th:if="${field.type == 'hidden'}"
+                               type="hidden"
+                               th:name="${field.javaBeanName}"
+                               th:id="${field.javaBeanName}"
+                               th:value="${returnPage.val[map][field.javaBeanName]}">
+                    </div>
+                    
+                    
+                    
+                    <div >
+                        <div class="form-group" >
+                            <label > 暂停(S)</label>
+                            <div>
+                                <!-- Text Input -->
+                                <input type="text"  name="pause"    class="form-control mt-3">
+
+                            </div>
+                        </div>
+                    </div>
+                    
+                </form>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn btn-success" type="button" onclick="submit()">保存</button>
+            <button class="btn btn-secondary" onclick="window.history.back()">返回</button>
+        </div>
+    </div>
+
+    <script th:each="js : ${returnPage.js}" th:src="${js.filePath}"></script>
+    <script>
+        function submit() {
+            if (validateForm()) {
+                $("#info_form").submit();
+            }
+        }
+
+        function validateForm() {
+            let isValid = true;
+            const requiredFields = document.querySelectorAll('[mandatory="2"]');
+            
+            // Remove any existing validation styles
+            requiredFields.forEach(field => {
+                field.classList.remove('is-invalid');
+                const existingFeedback = field.parentElement.querySelector('.invalid-feedback');
+                if (existingFeedback) {
+                    existingFeedback.remove();
+                }
+            });
+
+            // Validate each required field
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    isValid = false;
+                    field.classList.add('is-invalid');
+                    
+                    // Add error message
+                    const feedback = document.createElement('div');
+                    feedback.className = 'invalid-feedback';
+                    feedback.textContent = `${field.getAttribute('mandatoryName')}不能为空`;
+                    field.parentElement.appendChild(feedback);
+                }
+            });
+
+            if (!isValid) {
+                // Focus the first invalid field
+                document.querySelector('.is-invalid')?.focus();
+            }
+
+            return isValid;
+        }
+    </script>
+</body>
+</html>
