@@ -17,7 +17,7 @@
             height: '400px',
             width: '100%',
             // 可选的工具栏项目
-            toolbarItems: ['style', 'text', 'align', 'list', 'image', 'code'],
+            toolbarItems: ['style', 'text', 'align', 'list', 'image', 'code', 'indent', 'table'],
             // 内容变化回调
             onChange: (content) => {
                 console.log('Content changed:', content);
@@ -28,7 +28,7 @@
         const content = editor.getContent();
 
         // 设置内容
-        editor.setContent('<p>Hello World!</p>');
+        editor.setContent('<p>Hell</p>');
 
         // 销毁编辑器
         // editor.destroy();
