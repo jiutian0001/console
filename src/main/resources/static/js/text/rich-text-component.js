@@ -340,6 +340,9 @@ class RichTextEditor {
         const rowsInput = dialog.querySelector('#tableRows');
         const colsInput = dialog.querySelector('#tableCols');
 
+        // 聚焦到列数输入框
+        colsInput.focus();
+
         confirmBtn.addEventListener('click', () => {
             const rows = parseInt(rowsInput.value) || 3;
             const cols = parseInt(colsInput.value) || 3;
@@ -402,17 +405,22 @@ class RichTextEditor {
     }
 
     insertTable(rows, cols) {
-        let tableHtml = '<table><tbody>';
+        // 创建表格 DOM 节点
+        const table = document.createElement('table');
+        const tbody = document.createElement('tbody');
         for (let i = 0; i < rows; i++) {
-            tableHtml += '<tr>';
+            const tr = document.createElement('tr');
             for (let j = 0; j < cols; j++) {
-                tableHtml += '<td></td>';
+                const td = document.createElement('td');
+                tr.appendChild(td);
             }
-            tableHtml += '</tr>';
+            tbody.appendChild(tr);
         }
-        tableHtml += '</tbody></table>';
+        table.appendChild(tbody);
+
         this.visualEditor.focus();
-        document.execCommand('insertHTML', false, tableHtml);
+        this.visualEditor.appendChild(table); // 始终追加到末尾
+        this.syncContent();
     }
 
     setTableBorderColor(color) {
@@ -453,8 +461,8 @@ class RichTextEditor {
             reader.onload = (e) => {
                 const img = document.createElement('img');
                 img.src = e.target.result;
-                this.visualEditor.focus();
-                document.execCommand('insertHTML', false, img.outerHTML);
+                this.visualEditor.appendChild(img);
+                this.syncContent();
             };
             reader.readAsDataURL(file);
         }
