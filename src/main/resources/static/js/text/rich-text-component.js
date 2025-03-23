@@ -1,4 +1,3 @@
-// richTextEditor.js
 class RichTextEditor {
     constructor(targetElement, options = {}) {
         this.targetElement = typeof targetElement === 'string' ? 
@@ -13,6 +12,7 @@ class RichTextEditor {
             toolbarItems: options.toolbarItems || ['style', 'text', 'align', 'list', 'image', 'code', 'table'],
             onChange: options.onChange || null
         };
+        this.isFullPage = false;
         
         this.init();
     }
@@ -23,219 +23,281 @@ class RichTextEditor {
         this.createEditors();
         this.bindEvents();
         this.syncContent();
+        if (!this.visualEditor.innerHTML.trim()) {
+            this.visualEditor.innerHTML = '<p> </p>';
+        }
     }
 
-    createWrapper() {
-        this.wrapper = document.createElement('div');
-        this.wrapper.className = 'rich-editor-wrapper';
-        this.wrapper.style.width = this.options.width;
-        
-        const style = document.createElement('style');
-        style.textContent = `
-            .rich-editor-wrapper {
-                border: 1px solid #e0e0e0;
-                border-radius: 8px;
-                margin: 15px 0;
-                background: #fff;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            }
-            .rich-editor-toolbar {
-                padding: 10px;
-                border-bottom: 1px solid #e0e0e0;
-                background: #fafafa;
-                display: flex;
-                flex-wrap: wrap;
-                gap: 8px;
-                border-radius: 8px 8px 0 0;
-            }
-            .rich-editor-toolbar .group {
-                display: flex;
-                gap: 4px;
-                padding-right: 12px;
-                margin-right: 12px;
-                border-right: 1px solid #e0e0e0;
-            }
-            .rich-editor-btn {
-                padding: 6px 12px;
-                background: #fff;
-                border: 1px solid #d0d0d0;
-                border-radius: 6px;
-                cursor: pointer;
-                font-size: 14px;
-                transition: all 0.2s;
-            }
-            .rich-editor-btn:hover {
-                background: #f0f0f0;
-                border-color: #b0b0b0;
-            }
-            .rich-editor-btn.active {
-                background: #e6f0fa;
-                border-color: #007bff;
-            }
-            .rich-editor-content {
-                padding: 15px;
-                min-height: ${this.options.height};
-                outline: none;
-                line-height: 1.5;
-            }
-            .rich-editor-html {
-                width: 100%;
-                min-height: ${this.options.height};
-                padding: 15px;
-                font-family: monospace;
-                border: none;
-                outline: none;
-                resize: vertical;
-                display: none;
-            }
-            .rich-editor-content img {
-                max-width: 100%;
-                height: auto;
-                cursor: pointer;
-                border-radius: 4px;
-            }
-            .rich-editor-content img.selected {
-                border: 2px solid #007bff;
-            }
-            .rich-editor-content table {
-                border-collapse: collapse;
-                margin: 15px 0;
-                background: #fff;
-            }
-            .rich-editor-content table, 
-            .rich-editor-content th, 
-            .rich-editor-content td {
-                border: 1px solid #d0d0d0;
-                padding: 10px;
-                min-width: 120px;
-                min-height: 40px;
-            }
-            .rich-editor-content th {
-                background: #f5f5f5;
-                font-weight: bold;
-            }
-            .table-dialog, .color-dialog, .width-dialog {
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: #fff;
-                padding: 20px;
-                border: 1px solid #e0e0e0;
-                border-radius: 8px;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-                z-index: 1000;
-            }
-            .table-dialog input, .width-dialog input {
-                width: 60px;
-                margin: 0 10px;
-                padding: 6px;
-                border: 1px solid #d0d0d0;
-                border-radius: 4px;
-            }
-            .table-dialog button, .color-dialog button, .width-dialog button {
-                padding: 6px 12px;
-                margin: 0 5px;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-                background: #007bff;
-                color: white;
-                transition: background 0.2s;
-            }
-            .table-dialog button:hover, .color-dialog button:hover, .width-dialog button:hover {
-                background: #0056b3;
-            }
-        `;
-        document.head.appendChild(style);
-        
-        this.targetElement.parentNode.insertBefore(this.wrapper, this.targetElement.nextSibling);
-        this.targetElement.style.display = 'none';
-    }
+	createWrapper() {
+	    this.wrapper = document.createElement('div');
+	    this.wrapper.className = 'rich-editor-wrapper';
+	    this.wrapper.style.width = this.options.width;
+	    this.wrapper.style.maxHeight = this.options.height;
+	    this.wrapper.style.overflowY = 'auto';
+	    
+	    const style = document.createElement('style');
+	    style.textContent = `
+	        .rich-editor-wrapper {
+	            border: 1px solid #e0e0e0;
+	            border-radius: 8px;
+	            margin: 15px 0;
+	            background: #fff;
+	            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+	            position: relative;
+	        }
+	        .rich-editor-fullpage-container {
+	            position: fixed;
+	            top: 0;
+	            left: 0;
+	            width: 100vw;
+	            height: 100vh;
+	            background: #fff;
+	            z-index: 9999;
+	            display: flex;
+	            flex-direction: column;
+	        }
+	        .rich-editor-toolbar {
+	            padding: 10px;
+	            border-bottom: 1px solid #e0e0e0;
+	            background: #fafafa;
+	            display: flex;
+	            flex-wrap: wrap;
+	            gap: 8px;
+	            border-radius: 8px 8px 0 0;
+	            position: sticky;
+	            top: 0;
+	            z-index: 10;
+	        }
+	        .rich-editor-toolbar .group {
+	            display: flex;
+	            gap: 4px;
+	            padding-right: 12px;
+	            margin-right: 12px;
+	            border-right: 1px solid #e0e0e0;
+	        }
+	        .rich-editor-btn {
+	            padding: 6px 12px;
+	            background: #fff;
+	            border: 1px solid #d0d0d0;
+	            border-radius: 6px;
+	            cursor: pointer;
+	            font-size: 14px;
+	            transition: all 0.2s;
+	        }
+	        .rich-editor-btn:hover {
+	            background: #f0f0f0;
+	            border-color: #b0b0b0;
+	        }
+	        .rich-editor-btn.active {
+	            background: #e6f0fa;
+	            border-color: #007bff;
+	        }
+	        .rich-editor-content {
+	            padding: 15px;
+	            min-height: ${this.options.height};
+	            outline: none;
+	            line-height: 1.5;
+	            font-size: 16px; /* 默认字体大小 */
+	        }
+	        .rich-editor-fullpage-container .rich-editor-content {
+	            flex: 1;
+	            height: auto;
+	            overflow-y: auto;
+	            padding: 15px;
+	            font-size: 16px; /* 默认字体大小 */
+	        }
+	        .rich-editor-content p {
+	            margin: 0 0 10px 0;
+	            padding: 0;
+	        }
+	        .rich-editor-content div {
+	            margin: 0 0 10px 0;
+	            padding: 0;
+	        }
+	        .rich-editor-html {
+	            width: 100%;
+	            min-height: ${this.options.height};
+	            padding: 15px;
+	            font-family: monospace;
+	            border: none;
+	            outline: none;
+	            resize: vertical;
+	            display: none;
+	        }
+	        .rich-editor-content img {
+	            max-width: 100%;
+	            height: auto;
+	            cursor: pointer;
+	            border-radius: 4px;
+	        }
+	        .rich-editor-content img.selected {
+	            border: 2px solid #007bff;
+	        }
+	        .rich-editor-content table {
+	            border-collapse: collapse;
+	            margin: 15px 0 15px 20px;
+	            background: #fff;
+	        }
+	        .rich-editor-content table, 
+	        .rich-editor-content th, 
+	        .rich-editor-content td {
+	            border: 1px solid #d0d0d0;
+	            padding: 10px;
+	            min-width: 120px;
+	            min-height: 40px;
+	        }
+	        .rich-editor-content th {
+	            background: #f5f5f5;
+	            font-weight: bold;
+	        }
+	        .table-dialog, .color-dialog, .width-dialog {
+	            position: fixed;
+	            top: 50%;
+	            left: 50%;
+	            transform: translate(-50%, -50%);
+	            background: #fff;
+	            padding: 20px;
+	            border: 1px solid #e0e0e0;
+	            border-radius: 8px;
+	            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+	            z-index: 10000;
+	        }
+	        .table-dialog input, .width-dialog input {
+	            width: 60px;
+	            margin: 0 10px;
+	            padding: 6px;
+	            border: 1px solid #d0d0d0;
+	            border-radius: 4px;
+	        }
+	        .table-dialog button, .color-dialog button, .width-dialog button {
+	            padding: 6px 12px;
+	            margin: 0 5px;
+	            border: none;
+	            border-radius: 4px;
+	            cursor: pointer;
+	            background: #007bff;
+	            color: white;
+	            transition: background 0.2s;
+	        }
+	        .table-dialog button:hover, .color-dialog button:hover, .width-dialog button:hover {
+	            background: #0056b3;
+	        }
+	    `;
+	    document.head.appendChild(style);
+	    
+	    this.originalParent = this.targetElement.parentNode;
+	    this.originalSibling = this.targetElement.nextSibling;
+	    this.originalParent.insertBefore(this.wrapper, this.originalSibling);
+	    this.targetElement.style.display = 'none';
+	}
+	createToolbar() {
+	    const toolbar = document.createElement('div');
+	    toolbar.className = 'rich-editor-toolbar';
 
-    createToolbar() {
-        const toolbar = document.createElement('div');
-        toolbar.className = 'rich-editor-toolbar';
+	    if (this.options.toolbarItems.includes('style')) {
+	        const group = document.createElement('div');
+	        group.className = 'group';
+	        group.innerHTML = `
+	            <select class="rich-editor-btn" title="设置文本样式">
+	                <option value="p">段落</option>
+	                <option value="h1">标题1</option>
+	                <option value="h2">标题2</option>
+	                <option value="h3">标题3</option>
+	                <option value="h4">标题4</option>
+	            </select>
+	        `;
+	        toolbar.appendChild(group);
+	    }
 
-        if (this.options.toolbarItems.includes('style')) {
-            const group = document.createElement('div');
-            group.className = 'group';
-            group.innerHTML = `
-                <select class="rich-editor-btn" title="设置文本样式">
-                    <option value="p">段落</option>
-                    <option value="h1">标题1</option>
-                    <option value="h2">标题2</option>
-                    <option value="h3">标题3</option>
-                    <option value="h4">标题4</option>
-                </select>
-            `;
-            toolbar.appendChild(group);
-        }
+	    // 新增字体大小调整选项
+	    const fontSizeGroup = document.createElement('div');
+	    fontSizeGroup.className = 'group';
+	    fontSizeGroup.innerHTML = `
+	        <select class="rich-editor-btn" id="fontSizeSelect" title="设置字体大小">
+	            <option value="12px">12px</option>
+	            <option value="14px">14px</option>
+	            <option value="16px" selected>16px</option>
+	            <option value="18px">18px</option>
+	            <option value="20px">20px</option>
+	            <option value="24px">24px</option>
+	            <option value="30px">30px</option>
+	            <option value="36px">36px</option>
+	        </select>
+	    `;
+	    toolbar.appendChild(fontSizeGroup);
 
-        if (this.options.toolbarItems.includes('text')) {
-            const group = document.createElement('div');
-            group.className = 'group';
-            group.innerHTML = `
-                <button type="button" class="rich-editor-btn" data-command="bold" title="加粗">B</button>
-                <button type="button" class="rich-editor-btn" data-command="italic" title="斜体">I</button>
-                <button type="button" class="rich-editor-btn" data-command="underline" title="下划线">U</button>
-            `;
-            toolbar.appendChild(group);
-        }
+	    if (this.options.toolbarItems.includes('text')) {
+	        const group = document.createElement('div');
+	        group.className = 'group';
+	        group.innerHTML = `
+	            <button type="button" class="rich-editor-btn" data-command="bold" title="加粗">B</button>
+	            <button type="button" class="rich-editor-btn" data-command="italic" title="斜体">I</button>
+	            <button type="button" class="rich-editor-btn" data-command="underline" title="下划线">U</button>
+	        `;
+	        toolbar.appendChild(group);
+	    }
 
-        if (this.options.toolbarItems.includes('list')) {
-            const group = document.createElement('div');
-            group.className = 'group';
-            group.innerHTML = `
-                <button type="button" class="rich-editor-btn" data-command="insertUnorderedList" title="无序列表">•</button>
-                <button type="button" class="rich-editor-btn" data-command="insertOrderedList" title="有序列表">1.</button>
-            `;
-            toolbar.appendChild(group);
-        }
+	    if (this.options.toolbarItems.includes('list')) {
+	        const group = document.createElement('div');
+	        group.className = 'group';
+	        group.innerHTML = `
+	            <button type="button" class="rich-editor-btn" data-command="insertUnorderedList" title="无序列表">•</button>
+	            <button type="button" class="rich-editor-btn" data-command="insertOrderedList" title="有序列表">1.</button>
+	        `;
+	        toolbar.appendChild(group);
+	    }
 
-        if (this.options.toolbarItems.includes('align')) {
-            const group = document.createElement('div');
-            group.className = 'group';
-            group.innerHTML = `
-                <button type="button" class="rich-editor-btn" data-command="justifyLeft" title="左对齐">←</button>
-                <button type="button" class="rich-editor-btn" data-command="justifyCenter" title="居中对齐">↔</button>
-                <button type="button" class="rich-editor-btn" data-command="justifyRight" title="右对齐">→</button>
-            `;
-            toolbar.appendChild(group);
-        }
+	    if (this.options.toolbarItems.includes('align')) {
+	        const group = document.createElement('div');
+	        group.className = 'group';
+	        group.innerHTML = `
+	            <button type="button" class="rich-editor-btn" data-command="justifyLeft" title="左对齐">←</button>
+	            <button type="button" class="rich-editor-btn" data-command="justifyCenter" title="居中对齐">↔</button>
+	            <button type="button" class="rich-editor-btn" data-command="justifyRight" title="右对齐">→</button>
+	        `;
+	        toolbar.appendChild(group);
+	    }
 
-        if (this.options.toolbarItems.includes('table')) {
-            const group = document.createElement('div');
-            group.className = 'group';
-            group.innerHTML = `
-                <button type="button" class="rich-editor-btn" id="tableBtn" title="插入表格">表格</button>
-                <button type="button" class="rich-editor-btn" id="tableColorBtn" title="表格边框颜色">颜色</button>
-                <button type="button" class="rich-editor-btn" id="tableWidthBtn" title="表格边框宽度">宽度</button>
-            `;
-            toolbar.appendChild(group);
-        }
+	    if (this.options.toolbarItems.includes('table')) {
+	        const group = document.createElement('div');
+	        group.className = 'group';
+	        group.innerHTML = `
+	            <button type="button" class="rich-editor-btn" id="tableBtn" title="插入表格">表格</button>
+	            <button type="button" class="rich-editor-btn" id="tableColorBtn" title="表格边框颜色">颜色</button>
+	            <button type="button" class="rich-editor-btn" id="tableWidthBtn" title="表格边框宽度">宽度</button>
+	        `;
+	        toolbar.appendChild(group);
+	    }
 
-        if (this.options.toolbarItems.includes('image')) {
-            const group = document.createElement('div');
-            group.className = 'group';
-            group.innerHTML = `
-                <button type="button" class="rich-editor-btn" id="imageBtn" title="插入图片">图片</button>
-                <input type="file" id="imageInput" accept="image/*" style="display: none;">
-            `;
-            toolbar.appendChild(group);
-        }
+	    if (this.options.toolbarItems.includes('image')) {
+	        const group = document.createElement('div');
+	        group.className = 'group';
+	        group.innerHTML = `
+	            <button type="button" class="rich-editor-btn" id="imageBtn" title="插入图片">图片</button>
+	            <input type="file" id="imageInput" accept="image/*" style="display: none;">
+	        `;
+	        toolbar.appendChild(group);
+	    }
 
-        if (this.options.toolbarItems.includes('code')) {
-            const group = document.createElement('div');
-            group.className = 'group';
-            group.innerHTML = `
-                <button type="button" class="rich-editor-btn" id="codeToggle" title="切换代码视图">Code</button>
-            `;
-            toolbar.appendChild(group);
-        }
+	    if (this.options.toolbarItems.includes('code')) {
+	        const group = document.createElement('div');
+	        group.className = 'group';
+	        group.innerHTML = `
+	            <button type="button" class="rich-editor-btn" id="codeToggle" title="切换代码视图">Code</button>
+	        `;
+	        toolbar.appendChild(group);
+	    }
 
-        this.wrapper.appendChild(toolbar);
-    }
+	    const fullPageGroup = document.createElement('div');
+	    fullPageGroup.className = 'group';
+	    fullPageGroup.innerHTML = `
+	        <button type="button" class="rich-editor-btn" id="fullPageToggle" title="全页面编辑">全屏</button>
+	    `;
+	    toolbar.appendChild(fullPageGroup);
+
+	    this.wrapper.appendChild(toolbar);
+	    this.toolbar = toolbar;
+	}
 
     createEditors() {
         this.visualEditor = document.createElement('div');
@@ -248,82 +310,517 @@ class RichTextEditor {
         this.wrapper.appendChild(this.visualEditor);
         this.wrapper.appendChild(this.htmlEditor);
     }
+	
+	bindEvents() {
+	    this.wrapper.querySelectorAll('[data-command]').forEach(btn => {
+	        btn.addEventListener('click', (e) => {
+	            e.preventDefault();
+	            document.execCommand(btn.dataset.command, false, null);
+	        });
+	    });
 
-    bindEvents() {
-        this.wrapper.querySelectorAll('[data-command]').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                document.execCommand(btn.dataset.command, false, null);
-            });
-        });
+	    const styleSelect = this.wrapper.querySelector('select[title="设置文本样式"]');
+	    if (styleSelect) {
+	        styleSelect.addEventListener('change', (e) => {
+	            e.preventDefault();
+	            document.execCommand('formatBlock', false, e.target.value);
+	        });
+	    }
 
-        const styleSelect = this.wrapper.querySelector('select');
-        if (styleSelect) {
-            styleSelect.addEventListener('change', (e) => {
-                e.preventDefault();
-                document.execCommand('formatBlock', false, e.target.value);
-            });
+	    const fontSizeSelect = this.wrapper.querySelector('#fontSizeSelect');
+	    if (fontSizeSelect) {
+	        fontSizeSelect.addEventListener('change', (e) => {
+	            e.preventDefault();
+	            const size = e.target.value;
+	            const selection = window.getSelection();
+	            if (selection.rangeCount > 0) {
+	                const range = selection.getRangeAt(0);
+	                let container = range.commonAncestorContainer;
+	                if (container.nodeType === 3) container = container.parentElement;
+	                if (container.nodeName === 'SPAN' && container.style.fontSize) {
+	                    container.style.fontSize = size;
+	                } else {
+	                    const fragment = range.extractContents();
+	                    const spans = fragment.querySelectorAll('span');
+	                    spans.forEach(span => {
+	                        if (span.style.fontSize) {
+	                            const text = span.textContent;
+	                            span.parentNode.replaceChild(document.createTextNode(text), span);
+	                        }
+	                    });
+	                    const newSpan = document.createElement('span');
+	                    newSpan.style.fontSize = size;
+	                    newSpan.appendChild(fragment);
+	                    range.insertNode(newSpan);
+	                }
+	                selection.removeAllRanges();
+	                selection.addRange(range);
+	            }
+	            this.syncContent();
+	        });
+	    }
+
+	    const codeToggle = this.wrapper.querySelector('#codeToggle');
+	    if (codeToggle) {
+	        codeToggle.addEventListener('click', (e) => {
+	            e.preventDefault();
+	            this.toggleCodeView();
+	        });
+	    }
+
+	    const imageBtn = this.wrapper.querySelector('#imageBtn');
+	    const imageInput = this.wrapper.querySelector('#imageInput');
+	    if (imageBtn && imageInput) {
+	        imageBtn.addEventListener('click', (e) => {
+	            e.preventDefault();
+	            imageInput.click();
+	        });
+	        imageInput.addEventListener('change', (e) => this.handleImageUpload(e));
+	    }
+
+	    const tableBtn = this.wrapper.querySelector('#tableBtn');
+	    if (tableBtn) {
+	        tableBtn.addEventListener('click', (e) => {
+	            e.preventDefault();
+	            this.showTableDialog();
+	        });
+	    }
+
+	    const tableColorBtn = this.wrapper.querySelector('#tableColorBtn');
+	    if (tableColorBtn) {
+	        tableColorBtn.addEventListener('click', (e) => {
+	            e.preventDefault();
+	            this.showColorDialog();
+	        });
+	    }
+
+	    const tableWidthBtn = this.wrapper.querySelector('#tableWidthBtn');
+	    if (tableWidthBtn) {
+	        tableWidthBtn.addEventListener('click', (e) => {
+	            e.preventDefault();
+	            this.showWidthDialog();
+	        });
+	    }
+
+	    const fullPageToggle = this.wrapper.querySelector('#fullPageToggle');
+	    if (fullPageToggle) {
+	        fullPageToggle.addEventListener('click', (e) => {
+	            e.preventDefault();
+	            this.toggleFullPage();
+	        });
+	    }
+
+	    this.visualEditor.addEventListener('input', () => this.syncContent());
+	    this.htmlEditor.addEventListener('input', () => this.syncContent());
+
+	    this.visualEditor.addEventListener('paste', (e) => {
+	        e.preventDefault();
+	        const clipboardData = e.clipboardData || window.clipboardData;
+	        let pastedData = clipboardData.getData('text/html') || clipboardData.getData('text/plain');
+
+	        if (!pastedData.includes('<')) {
+	            pastedData = pastedData
+	                .split('\n')
+	                .filter(line => line.trim())
+	                .map(line => `<p>${line}</Icedata)`)
+	                .join('');
+	        } else {
+	            pastedData = pastedData
+	                .replace(/\r\n|\n/g, '</p><p>')
+	                .replace(/<\/p><p>\s*<\/p><p>/g, '</p><p>');
+	        }
+
+	        document.execCommand('insertHTML', false, pastedData);
+	        this.syncContent();
+	    });
+
+	    let lastEnterTime = 0;
+	    this.visualEditor.addEventListener('keydown', (e) => {
+	        if (e.key === 'Enter') {
+	            e.preventDefault();
+	            const selection = window.getSelection();
+	            if (selection.rangeCount === 0) return;
+
+	            const range = selection.getRangeAt(0);
+	            const currentBlock = range.startContainer.nodeType === 1 
+	                ? range.startContainer 
+	                : range.startContainer.parentElement;
+
+	            const now = Date.now();
+	            const isDoubleEnter = now - lastEnterTime < 500;
+	            lastEnterTime = now;
+
+	            let newNode;
+	            const li = currentBlock.closest('li');
+	            if (li) {
+	                const parentUlOrOl = li.parentElement;
+	                const isNested = parentUlOrOl.parentElement.tagName === 'LI';
+
+	                if (isDoubleEnter) {
+	                    if (isNested) {
+	                        const parentLi = parentUlOrOl.parentElement;
+	                        newNode = document.createElement('li');
+	                        newNode.innerHTML = ' ';
+	                        parentLi.insertAdjacentElement('afterend', newNode);
+	                    } else {
+	                        newNode = document.createElement('p');
+	                        newNode.innerHTML = ' ';
+	                        parentUlOrOl.insertAdjacentElement('afterend', newNode);
+	                    }
+	                } else {
+	                    newNode = document.createElement('li');
+	                    newNode.innerHTML = ' ';
+	                    li.insertAdjacentElement('afterend', newNode);
+	                }
+	            } else {
+	                newNode = document.createElement('p');
+	                newNode.innerHTML = ' ';
+	                if (currentBlock.tagName === 'DIV' || currentBlock === this.visualEditor) {
+	                    this.visualEditor.appendChild(newNode);
+	                } else {
+	                    currentBlock.insertAdjacentElement('afterend', newNode);
+	                }
+	            }
+
+	            // 设置光标位置
+	            range.setStart(newNode, 0);
+	            range.setEnd(newNode, 0);
+	            selection.removeAllRanges();
+	            selection.addRange(range);
+
+	            // 滚动到新节点位置
+	            const rect = newNode.getBoundingClientRect();
+	            const editorRect = this.visualEditor.getBoundingClientRect();
+	            const scrollTop = this.visualEditor.scrollTop;
+	            const relativeTop = rect.top - editorRect.top + scrollTop;
+
+	            if (rect.bottom > editorRect.bottom) {
+	                this.visualEditor.scrollTop = relativeTop - editorRect.height + rect.height + 10;
+	            } else if (rect.top < editorRect.top) {
+	                this.visualEditor.scrollTop = relativeTop - 10;
+	            }
+
+	            this.visualEditor.focus();
+	            this.syncContent();
+	        } else if (e.key === 'Tab') {
+	            e.preventDefault();
+	            const selection = window.getSelection();
+	            if (selection.rangeCount > 0) {
+	                const range = selection.getRangeAt(0);
+	                const currentBlock = range.startContainer.nodeType === 1 
+	                    ? range.startContainer 
+	                    : range.startContainer.parentElement;
+
+	                const li = currentBlock.closest('li');
+	                if (li) {
+	                    const parentUlOrOl = li.parentElement;
+	                    const isNested = parentUlOrOl.parentElement.tagName === 'LI';
+
+	                    if (!isNested && li.previousElementSibling) {
+	                        const subList = document.createElement(parentUlOrOl.tagName);
+	                        subList.appendChild(li.cloneNode(true));
+	                        li.previousElementSibling.appendChild(subList);
+	                        li.remove();
+	                        const newLi = subList.querySelector('li');
+	                        range.setStart(newLi, 0);
+	                        range.setEnd(newLi, 0);
+	                        selection.removeAllRanges();
+	                        selection.addRange(range);
+	                    } else {
+	                        document.execCommand('indent', false, null);
+	                    }
+	                } else {
+	                    document.execCommand('insertText', false, '    ');
+	                }
+	            }
+	            this.syncContent();
+	        }
+	    });
+	}
+	
+    toggleFullPage() {
+        if (!this.isFullPage) {
+            // 创建全屏容器
+            this.fullPageContainer = document.createElement('div');
+            this.fullPageContainer.className = 'rich-editor-fullpage-container';
+            this.fullPageContainer.appendChild(this.toolbar.cloneNode(true)); // 复制工具栏
+            this.fullPageContainer.appendChild(this.visualEditor.cloneNode(true)); // 复制编辑区域
+            document.body.appendChild(this.fullPageContainer);
+
+            // 绑定新工具栏的事件
+            this.bindFullPageEvents();
+
+            // 隐藏原始 wrapper
+            this.wrapper.style.display = 'none';
+            this.htmlEditor.style.display = 'none';
+            this.isFullPage = true;
+
+            // 更新全屏按钮文本
+            this.fullPageContainer.querySelector('#fullPageToggle').textContent = '返回';
+        } else {
+            // 同步内容回原始编辑器
+            const fullPageContent = this.fullPageContainer.querySelector('.rich-editor-content').innerHTML;
+            this.visualEditor.innerHTML = fullPageContent;
+
+            // 移除全屏容器
+            document.body.removeChild(this.fullPageContainer);
+            this.fullPageContainer = null;
+
+            // 显示原始 wrapper
+            this.wrapper.style.display = 'block';
+            this.isFullPage = false;
         }
-
-        const codeToggle = this.wrapper.querySelector('#codeToggle');
-        if (codeToggle) {
-            codeToggle.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.toggleCodeView();
-            });
+        this.syncContent();
+        if (this.isFullPage) {
+            this.fullPageContainer.querySelector('.rich-editor-content').focus();
+        } else {
+            this.visualEditor.focus();
         }
-
-        const imageBtn = this.wrapper.querySelector('#imageBtn');
-        const imageInput = this.wrapper.querySelector('#imageInput');
-        if (imageBtn && imageInput) {
-            imageBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                imageInput.click();
-            });
-            imageInput.addEventListener('change', (e) => this.handleImageUpload(e));
-        }
-
-        const tableBtn = this.wrapper.querySelector('#tableBtn');
-        if (tableBtn) {
-            tableBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.showTableDialog();
-            });
-        }
-
-        const tableColorBtn = this.wrapper.querySelector('#tableColorBtn');
-        if (tableColorBtn) {
-            tableColorBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.showColorDialog();
-            });
-        }
-
-        const tableWidthBtn = this.wrapper.querySelector('#tableWidthBtn');
-        if (tableWidthBtn) {
-            tableWidthBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.showWidthDialog();
-            });
-        }
-
-        this.visualEditor.addEventListener('input', () => this.syncContent());
-        this.htmlEditor.addEventListener('input', () => this.syncContent());
-
-        this.visualEditor.addEventListener('keydown', (e) => {
-            if (e.key === 'Tab') {
-                e.preventDefault();
-                if (e.shiftKey) {
-                    document.execCommand('outdent', false, null);
-                } else {
-                    document.execCommand('insertText', false, '    ');
-                }
-            } else if (e.key === 'Enter') {
-                e.stopPropagation();
-            }
-        });
     }
+	bindFullPageEvents() {
+	    const fullPageToolbar = this.fullPageContainer.querySelector('.rich-editor-toolbar');
+	    const fullPageEditor = this.fullPageContainer.querySelector('.rich-editor-content');
 
+	    // 工具栏按钮事件绑定（保持不变）
+	    fullPageToolbar.querySelectorAll('[data-command]').forEach(btn => {
+	        btn.addEventListener('click', (e) => {
+	            e.preventDefault();
+	            document.execCommand(btn.dataset.command, false, null);
+	        });
+	    });
+
+	    const styleSelect = fullPageToolbar.querySelector('select[title="设置文本样式"]');
+	    if (styleSelect) {
+	        styleSelect.addEventListener('change', (e) => {
+	            e.preventDefault();
+	            document.execCommand('formatBlock', false, e.target.value);
+	        });
+	    }
+
+	    const fontSizeSelect = fullPageToolbar.querySelector('#fontSizeSelect');
+	    if (fontSizeSelect) {
+	        fontSizeSelect.addEventListener('change', (e) => {
+	            e.preventDefault();
+	            const size = e.target.value;
+	            const selection = window.getSelection();
+	            if (selection.rangeCount > 0) {
+	                const range = selection.getRangeAt(0);
+	                let container = range.commonAncestorContainer;
+	                if (container.nodeType === 3) container = container.parentElement;
+	                if (container.nodeName === 'SPAN' && container.style.fontSize) {
+	                    container.style.fontSize = size;
+	                } else {
+	                    const fragment = range.extractContents();
+	                    const spans = fragment.querySelectorAll('span');
+	                    spans.forEach(span => {
+	                        if (span.style.fontSize) {
+	                            const text = span.textContent;
+	                            span.parentNode.replaceChild(document.createTextNode(text), span);
+	                        }
+	                    });
+	                    const newSpan = document.createElement('span');
+	                    newSpan.style.fontSize = size;
+	                    newSpan.appendChild(fragment);
+	                    range.insertNode(newSpan);
+	                }
+	                selection.removeAllRanges();
+	                selection.addRange(range);
+	            }
+	            this.syncContent();
+	        });
+	    }
+
+	    const codeToggle = fullPageToolbar.querySelector('#codeToggle');
+	    if (codeToggle) {
+	        codeToggle.addEventListener('click', (e) => {
+	            e.preventDefault();
+	            alert('代码视图在全屏模式下暂不可用，请返回普通模式');
+	        });
+	    }
+
+	    const imageBtn = fullPageToolbar.querySelector('#imageBtn');
+	    const imageInput = fullPageToolbar.querySelector('#imageInput');
+	    if (imageBtn && imageInput) {
+	        imageBtn.addEventListener('click', (e) => {
+	            e.preventDefault();
+	            imageInput.click();
+	        });
+	        imageInput.addEventListener('change', (e) => {
+	            const file = e.target.files[0];
+	            if (file) {
+	                const reader = new FileReader();
+	                reader.onload = (ev) => {
+	                    const img = document.createElement('img');
+	                    img.src = ev.target.result;
+	                    fullPageEditor.appendChild(img);
+	                    this.syncContent();
+	                };
+	                reader.readAsDataURL(file);
+	            }
+	        });
+	    }
+
+	    const tableBtn = fullPageToolbar.querySelector('#tableBtn');
+	    if (tableBtn) {
+	        tableBtn.addEventListener('click', (e) => {
+	            e.preventDefault();
+	            this.showTableDialog();
+	        });
+	    }
+
+	    const tableColorBtn = fullPageToolbar.querySelector('#tableColorBtn');
+	    if (tableColorBtn) {
+	        tableColorBtn.addEventListener('click', (e) => {
+	            e.preventDefault();
+	            this.showColorDialog();
+	        });
+	    }
+
+	    const tableWidthBtn = fullPageToolbar.querySelector('#tableWidthBtn');
+	    if (tableWidthBtn) {
+	        tableWidthBtn.addEventListener('click', (e) => {
+	            e.preventDefault();
+	            this.showWidthDialog();
+	        });
+	    }
+
+	    const fullPageToggle = fullPageToolbar.querySelector('#fullPageToggle');
+	    if (fullPageToggle) {
+	        fullPageToggle.addEventListener('click', (e) => {
+	            e.preventDefault();
+	            this.toggleFullPage();
+	        });
+	    }
+
+	    fullPageEditor.addEventListener('input', () => this.syncContent());
+
+	    fullPageEditor.addEventListener('paste', (e) => {
+	        e.preventDefault();
+	        const clipboardData = e.clipboardData || window.clipboardData;
+	        let pastedData = clipboardData.getData('text/html') || clipboardData.getData('text/plain');
+
+	        if (!pastedData.includes('<')) {
+	            pastedData = pastedData
+	                .split('\n')
+	                .filter(line => line.trim())
+	                .map(line => `<p>${line}</p>`)
+	                .join('');
+	        } else {
+	            pastedData = pastedData
+	                .replace(/\r\n|\n/g, '</p><p>')
+	                .replace(/<\/p><p>\s*<\/p><p>/g, '</p><p>');
+	        }
+
+	        document.execCommand('insertHTML', false, pastedData);
+	        this.syncContent();
+	    });
+
+	    let lastEnterTime = 0;
+	    fullPageEditor.addEventListener('keydown', (e) => {
+	        if (e.key === 'Enter') {
+	            e.preventDefault();
+	            const selection = window.getSelection();
+	            if (selection.rangeCount === 0) return;
+
+	            const range = selection.getRangeAt(0);
+	            const currentBlock = range.startContainer.nodeType === 1 
+	                ? range.startContainer 
+	                : range.startContainer.parentElement;
+
+	            const now = Date.now();
+	            const isDoubleEnter = now - lastEnterTime < 500;
+	            lastEnterTime = now;
+
+	            let newNode; // 定义新节点变量
+	            const li = currentBlock.closest('li');
+	            if (li) {
+	                const parentUlOrOl = li.parentElement;
+	                const isNested = parentUlOrOl.parentElement.tagName === 'LI';
+
+	                if (isDoubleEnter) {
+	                    if (isNested) {
+	                        const parentLi = parentUlOrOl.parentElement;
+	                        newNode = document.createElement('li');
+	                        newNode.innerHTML = ' ';
+	                        parentLi.insertAdjacentElement('afterend', newNode);
+	                    } else {
+	                        newNode = document.createElement('p');
+	                        newNode.innerHTML = ' ';
+	                        parentUlOrOl.insertAdjacentElement('afterend', newNode);
+	                    }
+	                } else {
+	                    newNode = document.createElement('li');
+	                    newNode.innerHTML = ' ';
+	                    li.insertAdjacentElement('afterend', newNode);
+	                }
+	            } else {
+	                newNode = document.createElement('p');
+	                newNode.innerHTML = ' ';
+	                if (currentBlock.tagName === 'DIV' || currentBlock === fullPageEditor) {
+	                    fullPageEditor.appendChild(newNode);
+	                } else {
+	                    currentBlock.insertAdjacentElement('afterend', newNode);
+	                }
+	            }
+
+	            // 设置光标位置
+	            range.setStart(newNode, 0);
+	            range.setEnd(newNode, 0);
+	            selection.removeAllRanges();
+	            selection.addRange(range);
+
+	            // 滚动到新节点位置
+	            const rect = newNode.getBoundingClientRect();
+	            const editorRect = fullPageEditor.getBoundingClientRect();
+	            const scrollTop = fullPageEditor.scrollTop;
+	            const relativeTop = rect.top - editorRect.top + scrollTop;
+
+	            // 如果新节点在视口下方，滚动到可见位置
+	            if (rect.bottom > editorRect.bottom) {
+	                fullPageEditor.scrollTop = relativeTop - editorRect.height + rect.height + 10; // 加一点缓冲
+	            }
+	            // 如果新节点在视口上方（比如跳出嵌套列表时），也调整滚动
+	            else if (rect.top < editorRect.top) {
+	                fullPageEditor.scrollTop = relativeTop - 10; // 上方缓冲
+	            }
+
+	            fullPageEditor.focus(); // 确保编辑器获得焦点
+	            this.syncContent();
+	        } else if (e.key === 'Tab') {
+	            e.preventDefault();
+	            const selection = window.getSelection();
+	            if (selection.rangeCount > 0) {
+	                const range = selection.getRangeAt(0);
+	                const currentBlock = range.startContainer.nodeType === 1 
+	                    ? range.startContainer 
+	                    : range.startContainer.parentElement;
+
+	                const li = currentBlock.closest('li');
+	                if (li) {
+	                    const parentUlOrOl = li.parentElement;
+	                    const isNested = parentUlOrOl.parentElement.tagName === 'LI';
+
+	                    if (!isNested && li.previousElementSibling) {
+	                        const subList = document.createElement(parentUlOrOl.tagName);
+	                        subList.appendChild(li.cloneNode(true));
+	                        li.previousElementSibling.appendChild(subList);
+	                        li.remove();
+	                        const newLi = subList.querySelector('li');
+	                        range.setStart(newLi, 0);
+	                        range.setEnd(newLi, 0);
+	                        selection.removeAllRanges();
+	                        selection.addRange(range);
+	                    } else {
+	                        document.execCommand('indent', false, null);
+	                    }
+	                } else {
+	                    document.execCommand('insertText', false, '    ');
+	                }
+	            }
+	            this.syncContent();
+	        }
+	    });
+	}
     showTableDialog() {
         const dialog = document.createElement('div');
         dialog.className = 'table-dialog';
@@ -340,7 +837,6 @@ class RichTextEditor {
         const rowsInput = dialog.querySelector('#tableRows');
         const colsInput = dialog.querySelector('#tableCols');
 
-        // 聚焦到列数输入框
         colsInput.focus();
 
         confirmBtn.addEventListener('click', () => {
@@ -405,7 +901,6 @@ class RichTextEditor {
     }
 
     insertTable(rows, cols) {
-        // 创建表格 DOM 节点
         const table = document.createElement('table');
         const tbody = document.createElement('tbody');
         for (let i = 0; i < rows; i++) {
@@ -418,13 +913,17 @@ class RichTextEditor {
         }
         table.appendChild(tbody);
 
-        this.visualEditor.focus();
-        this.visualEditor.appendChild(table); // 始终追加到末尾
+        const targetEditor = this.isFullPage ? 
+            this.fullPageContainer.querySelector('.rich-editor-content') : this.visualEditor;
+        targetEditor.focus();
+        targetEditor.appendChild(table);
         this.syncContent();
     }
 
     setTableBorderColor(color) {
-        const tables = this.visualEditor.querySelectorAll('table');
+        const targetEditor = this.isFullPage ? 
+            this.fullPageContainer.querySelector('.rich-editor-content') : this.visualEditor;
+        const tables = targetEditor.querySelectorAll('table');
         tables.forEach(table => {
             table.style.borderColor = color;
             const cells = table.querySelectorAll('td, th');
@@ -433,7 +932,9 @@ class RichTextEditor {
     }
 
     setTableBorderWidth(width) {
-        const tables = this.visualEditor.querySelectorAll('table');
+        const targetEditor = this.isFullPage ? 
+            this.fullPageContainer.querySelector('.rich-editor-content') : this.visualEditor;
+        const tables = targetEditor.querySelectorAll('table');
         tables.forEach(table => {
             table.style.borderWidth = `${width}px`;
             const cells = table.querySelectorAll('td, th');
@@ -461,7 +962,9 @@ class RichTextEditor {
             reader.onload = (e) => {
                 const img = document.createElement('img');
                 img.src = e.target.result;
-                this.visualEditor.appendChild(img);
+                const targetEditor = this.isFullPage ? 
+                    this.fullPageContainer.querySelector('.rich-editor-content') : this.visualEditor;
+                targetEditor.appendChild(img);
                 this.syncContent();
             };
             reader.readAsDataURL(file);
@@ -470,7 +973,15 @@ class RichTextEditor {
 
     syncContent() {
         const isHtmlMode = this.htmlEditor.style.display === 'block';
-        const content = isHtmlMode ? this.htmlEditor.value : this.visualEditor.innerHTML;
+        let content;
+        if (isHtmlMode) {
+            content = this.htmlEditor.value;
+        } else if (this.isFullPage) {
+            content = this.fullPageContainer.querySelector('.rich-editor-content').innerHTML;
+            this.visualEditor.innerHTML = content; // 同步到原始编辑器
+        } else {
+            content = this.visualEditor.innerHTML;
+        }
         this.targetElement.value = content;
         
         if (this.options.onChange) {
@@ -482,12 +993,26 @@ class RichTextEditor {
         let formatted = '';
         let indent = 0;
         const tab = '    ';
+        
+        html = html.trim();
+        if (!html) return '';
+
         html.split(/>\s*</).forEach(function(element) {
-            if (element.match(/^\/\w/)) indent--;
-            formatted += tab.repeat(indent) + '<' + element + '>\n';
-            if (element.match(/^<?\w[^>]*[^\/]$/) && !element.startsWith("input")) indent++;
+            if (element.match(/^\/\w/)) {
+                indent--;
+            }
+            const safeIndent = Math.max(0, indent);
+            if (indent < 0) {
+                console.warn(`Indent became negative: ${indent}, element: ${element}`);
+            }
+            formatted += tab.repeat(safeIndent) + '<' + element + '>\n';
+            if (element.match(/^<?\w[^>]*[^\/]$/) && !element.startsWith("input")) {
+                indent++;
+            }
         });
-        return formatted.substring(1, formatted.length-3);
+
+        const result = formatted.substring(1, formatted.length - 3);
+        return result || html;
     }
 
     getContent() {
@@ -501,6 +1026,9 @@ class RichTextEditor {
     }
 
     destroy() {
+        if (this.fullPageContainer) {
+            document.body.removeChild(this.fullPageContainer);
+        }
         this.wrapper.remove();
         this.targetElement.style.display = '';
     }
