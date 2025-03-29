@@ -311,6 +311,7 @@ class RichTextEditor {
         this.wrapper.appendChild(this.htmlEditor);
     }
 	
+	
 	bindEvents() {
 	    this.wrapper.querySelectorAll('[data-command]').forEach(btn => {
 	        btn.addEventListener('click', (e) => {
@@ -422,7 +423,7 @@ class RichTextEditor {
 	            pastedData = pastedData
 	                .split('\n')
 	                .filter(line => line.trim())
-	                .map(line => `<p>${line}</Icedata)`)
+	                .map(line => `<p>${line}</p>`)
 	                .join('');
 	        } else {
 	            pastedData = pastedData
@@ -442,9 +443,15 @@ class RichTextEditor {
 	            if (selection.rangeCount === 0) return;
 
 	            const range = selection.getRangeAt(0);
-	            const currentBlock = range.startContainer.nodeType === 1 
+	            let currentBlock = range.startContainer.nodeType === 1 
 	                ? range.startContainer 
 	                : range.startContainer.parentElement;
+
+	            // 确保 currentBlock 是块级元素
+	            while (currentBlock && !['P', 'LI', 'DIV'].includes(currentBlock.nodeName) && currentBlock !== this.visualEditor) {
+	                currentBlock = currentBlock.parentElement;
+	            }
+	            if (!currentBlock) currentBlock = this.visualEditor;
 
 	            const now = Date.now();
 	            const isDoubleEnter = now - lastEnterTime < 500;
@@ -460,33 +467,43 @@ class RichTextEditor {
 	                    if (isNested) {
 	                        const parentLi = parentUlOrOl.parentElement;
 	                        newNode = document.createElement('li');
-	                        newNode.innerHTML = ' ';
+	                        newNode.innerHTML = '<br>'; // 使用 <br> 确保空行可见
 	                        parentLi.insertAdjacentElement('afterend', newNode);
 	                    } else {
 	                        newNode = document.createElement('p');
-	                        newNode.innerHTML = ' ';
+	                        newNode.innerHTML = '<br>';
 	                        parentUlOrOl.insertAdjacentElement('afterend', newNode);
 	                    }
 	                } else {
 	                    newNode = document.createElement('li');
-	                    newNode.innerHTML = ' ';
+	                    newNode.innerHTML = '<br>';
 	                    li.insertAdjacentElement('afterend', newNode);
 	                }
 	            } else {
+	                // 处理普通段落换行
 	                newNode = document.createElement('p');
-	                newNode.innerHTML = ' ';
-	                if (currentBlock.tagName === 'DIV' || currentBlock === this.visualEditor) {
+	                if (currentBlock === this.visualEditor || currentBlock.nodeName === 'DIV') {
+	                    // 直接在编辑器根部或 DIV 中
+	                    newNode.innerHTML = '<br>';
 	                    this.visualEditor.appendChild(newNode);
 	                } else {
+	                    // 分割当前段落
+	                    const fragment = range.extractContents();
+	                    newNode.appendChild(fragment);
+	                    if (!newNode.innerHTML.trim()) newNode.innerHTML = '<br>';
 	                    currentBlock.insertAdjacentElement('afterend', newNode);
+
+	                    // 确保当前块不为空
+	                    if (!currentBlock.innerHTML.trim()) currentBlock.innerHTML = '<br>';
 	                }
 	            }
 
-	            // 设置光标位置
-	            range.setStart(newNode, 0);
-	            range.setEnd(newNode, 0);
+	            // 设置光标位置到新节点
+	            const rangeNew = document.createRange();
+	            rangeNew.selectNodeContents(newNode);
+	            rangeNew.collapse(true); // 光标移到新节点开头
 	            selection.removeAllRanges();
-	            selection.addRange(range);
+	            selection.addRange(rangeNew);
 
 	            // 滚动到新节点位置
 	            const rect = newNode.getBoundingClientRect();
@@ -577,11 +594,12 @@ class RichTextEditor {
             this.visualEditor.focus();
         }
     }
+	
 	bindFullPageEvents() {
 	    const fullPageToolbar = this.fullPageContainer.querySelector('.rich-editor-toolbar');
 	    const fullPageEditor = this.fullPageContainer.querySelector('.rich-editor-content');
 
-	    // 工具栏按钮事件绑定（保持不变）
+	    // 工具栏按钮事件绑定
 	    fullPageToolbar.querySelectorAll('[data-command]').forEach(btn => {
 	        btn.addEventListener('click', (e) => {
 	            e.preventDefault();
@@ -723,15 +741,21 @@ class RichTextEditor {
 	            if (selection.rangeCount === 0) return;
 
 	            const range = selection.getRangeAt(0);
-	            const currentBlock = range.startContainer.nodeType === 1 
+	            let currentBlock = range.startContainer.nodeType === 1 
 	                ? range.startContainer 
 	                : range.startContainer.parentElement;
+
+	            // 确保 currentBlock 是块级元素
+	            while (currentBlock && !['P', 'LI', 'DIV'].includes(currentBlock.nodeName) && currentBlock !== fullPageEditor) {
+	                currentBlock = currentBlock.parentElement;
+	            }
+	            if (!currentBlock) currentBlock = fullPageEditor;
 
 	            const now = Date.now();
 	            const isDoubleEnter = now - lastEnterTime < 500;
 	            lastEnterTime = now;
 
-	            let newNode; // 定义新节点变量
+	            let newNode;
 	            const li = currentBlock.closest('li');
 	            if (li) {
 	                const parentUlOrOl = li.parentElement;
@@ -741,33 +765,40 @@ class RichTextEditor {
 	                    if (isNested) {
 	                        const parentLi = parentUlOrOl.parentElement;
 	                        newNode = document.createElement('li');
-	                        newNode.innerHTML = ' ';
+	                        newNode.innerHTML = '<br>';
 	                        parentLi.insertAdjacentElement('afterend', newNode);
 	                    } else {
 	                        newNode = document.createElement('p');
-	                        newNode.innerHTML = ' ';
+	                        newNode.innerHTML = '<br>';
 	                        parentUlOrOl.insertAdjacentElement('afterend', newNode);
 	                    }
 	                } else {
 	                    newNode = document.createElement('li');
-	                    newNode.innerHTML = ' ';
+	                    newNode.innerHTML = '<br>';
 	                    li.insertAdjacentElement('afterend', newNode);
 	                }
 	            } else {
+	                // 处理普通段落换行
 	                newNode = document.createElement('p');
-	                newNode.innerHTML = ' ';
-	                if (currentBlock.tagName === 'DIV' || currentBlock === fullPageEditor) {
+	                if (currentBlock === fullPageEditor || currentBlock.nodeName === 'DIV') {
+	                    newNode.innerHTML = '<br>';
 	                    fullPageEditor.appendChild(newNode);
 	                } else {
+	                    const fragment = range.extractContents();
+	                    newNode.appendChild(fragment);
+	                    if (!newNode.innerHTML.trim()) newNode.innerHTML = '<br>';
 	                    currentBlock.insertAdjacentElement('afterend', newNode);
+
+	                    if (!currentBlock.innerHTML.trim()) currentBlock.innerHTML = '<br>';
 	                }
 	            }
 
-	            // 设置光标位置
-	            range.setStart(newNode, 0);
-	            range.setEnd(newNode, 0);
+	            // 设置光标位置到新节点
+	            const rangeNew = document.createRange();
+	            rangeNew.selectNodeContents(newNode);
+	            rangeNew.collapse(true); // 光标移到新节点开头
 	            selection.removeAllRanges();
-	            selection.addRange(range);
+	            selection.addRange(rangeNew);
 
 	            // 滚动到新节点位置
 	            const rect = newNode.getBoundingClientRect();
@@ -775,16 +806,13 @@ class RichTextEditor {
 	            const scrollTop = fullPageEditor.scrollTop;
 	            const relativeTop = rect.top - editorRect.top + scrollTop;
 
-	            // 如果新节点在视口下方，滚动到可见位置
 	            if (rect.bottom > editorRect.bottom) {
-	                fullPageEditor.scrollTop = relativeTop - editorRect.height + rect.height + 10; // 加一点缓冲
-	            }
-	            // 如果新节点在视口上方（比如跳出嵌套列表时），也调整滚动
-	            else if (rect.top < editorRect.top) {
-	                fullPageEditor.scrollTop = relativeTop - 10; // 上方缓冲
+	                fullPageEditor.scrollTop = relativeTop - editorRect.height + rect.height + 10;
+	            } else if (rect.top < editorRect.top) {
+	                fullPageEditor.scrollTop = relativeTop - 10;
 	            }
 
-	            fullPageEditor.focus(); // 确保编辑器获得焦点
+	            fullPageEditor.focus();
 	            this.syncContent();
 	        } else if (e.key === 'Tab') {
 	            e.preventDefault();
@@ -821,6 +849,7 @@ class RichTextEditor {
 	        }
 	    });
 	}
+	
     showTableDialog() {
         const dialog = document.createElement('div');
         dialog.className = 'table-dialog';
