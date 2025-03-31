@@ -49,6 +49,18 @@ public class AutoLmService {
 				}else {
 					commonDao.update(webpa,rp);
 				}
+				
+				if(webpa.containsKey("autoSort")   && null!=webpa.get("autoSort")) {
+					//序号自动排序
+					String au=MapUtils.getValueStr(webpa, "autoSort");
+					if(null!=au && au.length()>0) {
+						Integer lmId = MapUtils.getValueInt(webpa, "lmId");
+						Integer itemSort = MapUtils.getValueInt(webpa, "itemSort");
+						if(null!=lmId && null!=itemSort) {
+							utilMapper.updateAutoSort(lmId,itemSort);
+						}
+					}
+				}
 			}
 	 }
 }

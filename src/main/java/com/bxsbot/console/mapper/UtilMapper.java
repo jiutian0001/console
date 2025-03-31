@@ -23,5 +23,12 @@ public interface UtilMapper {
 	 * @param pause
 	 */
 	void saveLMPause(@Param("itemName")String itemName, @Param("itemSort")Integer itemSort, @Param("s")Integer s, @Param("lmId")Integer lmId);
+	/***
+	 * 传入排序，后面+1
+	 * @param lmId
+	 * @param itemSort
+	 */
+		
+	void updateAutoSort( @Param("lmId")Integer lmId,  @Param("itemSort")Integer itemSort);
 
 }

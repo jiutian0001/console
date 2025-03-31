@@ -84,6 +84,7 @@ FROM
 FROM 
     components
     WHERE  sta=1  
+     AND in_info_page=1
      ORDER BY position ASC
     </select>
     
