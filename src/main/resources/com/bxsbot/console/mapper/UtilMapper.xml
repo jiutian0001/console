@@ -17,7 +17,7 @@
    </insert>
    
    <update id="updateAutoSort">
-   	UPDATE lm_item SET item_sort=item_sort+1  WHERE sta=1  AND  lm_id=#{lmId} AND item_sort > #{itemSort}  
+   	UPDATE lm_item SET item_sort=item_sort+#{num}  WHERE sta=1  AND  lm_id=#{lmId} AND item_sort >= #{itemSort}  
    
    </update>
 </mapper>

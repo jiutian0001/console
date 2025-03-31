@@ -27,8 +27,9 @@ public interface UtilMapper {
 	 * 传入排序，后面+1
 	 * @param lmId
 	 * @param itemSort
+	 * @param num 
 	 */
 		
-	void updateAutoSort( @Param("lmId")Integer lmId,  @Param("itemSort")Integer itemSort);
+	void updateAutoSort( @Param("lmId")Integer lmId,  @Param("itemSort")Integer itemSort,@Param("num") Integer num);
 
 }

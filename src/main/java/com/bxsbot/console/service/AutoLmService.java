@@ -36,31 +36,38 @@ public class AutoLmService {
 				}
 				Integer  id=MapUtils.getValueInt(webpa, "id");
 				PageUtils.setInfo(pageId, rp);
+			Integer num=1; 
+			Integer pause=MapUtils.getValueInt(webpa, "pause");
+			if(null!=pause) {
+				num=2;
+			}
 				if(null==id) {
+					if(webpa.containsKey("autoSort")   && null!=webpa.get("autoSort")) {
+						//序号自动排序
+						String au=MapUtils.getValueStr(webpa, "autoSort");
+						if(null!=au && au.length()>0) {
+							Integer lmId = MapUtils.getValueInt(webpa, "lmId");
+							Integer itemSort = MapUtils.getValueInt(webpa, "itemSort");
+							if(null!=lmId && null!=itemSort) {
+								utilMapper.updateAutoSort(lmId,itemSort,num);
+							}
+						}
+					}
 					commonDao.save(webpa,rp);
-					Integer pause=MapUtils.getValueInt(webpa, "pause");
+					
 					if(null!=pause) {
 						//添加暂停秒
 						String itemName="暂停"+pause+"S";
 						Integer itemSort=MapUtils.getValueInt(webpa, "itemSort")+1;
 						Integer lmId=MapUtils.getValueInt(webpa, "lmId");
 						utilMapper.saveLMPause(itemName,itemSort,pause,lmId);
+						num=2;
 					}
 				}else {
 					commonDao.update(webpa,rp);
 				}
+			
 				
-				if(webpa.containsKey("autoSort")   && null!=webpa.get("autoSort")) {
-					//序号自动排序
-					String au=MapUtils.getValueStr(webpa, "autoSort");
-					if(null!=au && au.length()>0) {
-						Integer lmId = MapUtils.getValueInt(webpa, "lmId");
-						Integer itemSort = MapUtils.getValueInt(webpa, "itemSort");
-						if(null!=lmId && null!=itemSort) {
-							utilMapper.updateAutoSort(lmId,itemSort);
-						}
-					}
-				}
 			}
 	 }
 }
