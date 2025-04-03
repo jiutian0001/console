@@ -12,7 +12,6 @@ import com.bxsbot.console.dao.CommonDao;
 import com.bxsbot.console.mapper.UtilMapper;
 import com.bxsbot.console.utils.MapUtils;
 import com.bxsbot.console.utils.PageUtils;
-import com.bxsbot.console.utils.Stringutils;
 
 @Service 
 public class AutoLmService {
