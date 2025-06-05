@@ -14,7 +14,7 @@ $(document).ready(function() {
 		        // 这里传递一个配置对象，可以根据需要调整
 		        WdatePicker({
 		            el: elementId, // 这会直接绑定到ID为elementId的元素
-		            dateFmt: 'yyyy-MM-dd', // 日期格式
+		            dateFmt: 'yyyy-MM-dd HH:mm:ss', // 日期格式
 		            minDate: '%y-%M-%d', // 最小日期（今天）
 		            isShowClear: true, // 显示清空按钮
 		            isShowToday: true, // 显示今天按钮
