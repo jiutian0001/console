@@ -12,14 +12,14 @@ public class OCRUtils {
     // 设置Tesseract的语言路径
    // private static final String TESSDATA_PATH = "C:\\Users\\Administrator\\eclipse-workspace\\console\\src\\main\\resources\\tessdata"; // tessdata路径
     private static final String LANGUAGE = "eng"; // 默认是英文，可以根据需要设置
-    
+    public static final String DEFAULT_TESSERACT_PATH = "C:/Program Files/Tesseract-OCR/tessdata";
     public static String extractTextFromImage(String imagePath) {
         ITesseract instance = new Tesseract();
         
         // 设置Tesseract的语言路径
      //   instance.setTessVariable("tessdata", TESSDATA_PATH);
         instance.setLanguage(LANGUAGE);
-        
+        instance.setDatapath(DEFAULT_TESSERACT_PATH);
         try {
             // 读取图片文件
             BufferedImage bufferedImage = ImageIO.read(new File(imagePath));
