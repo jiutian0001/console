@@ -13,7 +13,8 @@
     url,
     pid,
     sort_field sortField,
-    sort_order sortOrder
+    sort_order sortOrder,
+    date_ids dateIds
 FROM 
     pages
     WHERE

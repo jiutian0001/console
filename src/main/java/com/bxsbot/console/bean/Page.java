@@ -7,7 +7,7 @@ public class Page {
     private String addUrl;
     private String returnPage;
     private String type;
-    private String url,sortField,sortOrder;
+    private String url,sortField,sortOrder,dateIds;
     
     
 	public Page() {
@@ -16,6 +16,25 @@ public class Page {
 	}
 	
 	
+
+
+
+	public String getDateIds() {
+		return dateIds;
+	}
+
+
+
+
+
+	public void setDateIds(String dateIds) {
+		this.dateIds = dateIds;
+	}
+
+
+
+
+
 	public String getSortField() {
 		return sortField;
 	}
