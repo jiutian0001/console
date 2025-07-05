@@ -19,7 +19,7 @@
             height: 100%;
             display: flex;
             flex-direction: column;
-            padding: 20px;
+            padding: 15px;
             gap: 20px;
         }
 
@@ -153,16 +153,28 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
            
         } */
-
+a{
+  text-decoration: none;
+}
         /* 按钮样式 */
-        .btn {
-            padding: 8px 16px;
+		  .btn {
+		  padding: 8px 16px; /* 内边距：上下8px，左右16px */
+		  border-radius: 6px; /* 圆角 */
+		  font-weight: 500; /* 字体粗细 */
+		  transition: all 0.3s ease; /* 过渡效果 */
+		  border: 1px solid transparent; /* 透明边框 */
+		  cursor: pointer; /* 鼠标指针 */
+		  font-size: 15px; /* 字体大小 */
+		}
+		.btn2{
+		  padding: 8px 16px;
             border-radius: 6px;
-            font-weight: 500;
+            font-weight: 700;
             transition: all 0.3s ease;
-            border: 1px solid transparent;
+            border: 1px solid transparent; 
             cursor: pointer;
-        }
+            font-size: 15px;
+		}
 
         .btn-primary {
             background-color: #3182ce;
@@ -251,7 +263,7 @@
 <body>
     <div class="container-fluid">
         <!-- 搜索区域 -->
-        <div class="search-section">
+        <div class="search-section" >
             <form id="paginationForm" class="row g-3" method="post" 
                   th:action="@{/web/{cmd}(cmd=${returnPage.page.searchUrl})}">
                 <input type="hidden" id="currentPage" name="currentPage" 
@@ -260,8 +272,8 @@
                        th:value="${returnPage.val[page].pageSize}">
 
                 <!-- 搜索字段 -->
-                <div th:each="field : ${returnPage.search}" class="col-md-1">
-                    <div th:switch="${field.type}">
+                <div th:each="field : ${returnPage.search}" class="col-md-1" style="display: inline">
+                    <div th:switch="${field.type}"  style="display: inline">
                     <input th:case="'hidden'" type="text" 
                                th:name="${field.javaBeanName}" 
                                th:id="${field.javaBeanName}"
@@ -295,15 +307,15 @@
                 </div>
 
                 <!-- 按钮区域 -->
-                <div class="col-md-4 d-flex align-items-end">
-                    <div style="margin-right: 10px" th:each="bu : ${returnPage.buttons}">
-                        <div th:if="${bu.action==null}">
+                <div class="col-md-4 d-flex align-items-end" style="display: inline">
+                    <div style="margin-right: 1px ;display: inline" th:each="bu : ${returnPage.buttons}" >
+                        <div th:if="${bu.action==null}" style="display: inline">
                             <button type="button" class="btn btn-primary" 
                                     onclick="performSearch()" 
                                     th:text="${bu.label}">搜索</button>
                         </div>
-                        <div th:if="${bu.action!=null}">
-                            <a th:if="${bu.pageId==null}" 
+                        <div th:if="${bu.action!=null}" style="display: inline">
+                            <a   th:if="${bu.pageId==null}" 
                                class="btn btn-primary"
                                th:text="${bu.label}"
                                th:href="@{/web/{cmd}(cmd=${returnPage.page.addUrl})}"></a>
@@ -331,7 +343,7 @@
                     <tbody>
                         <tr th:each="column : ${returnPage.val[list]}">
                             <th:block th:with="id=${column[id]}">
-                                <td th:each="component : ${returnPage.table}">
+                                <td th:name="'td-'+${component.javaBeanName}"  th:each="component : ${returnPage.table}">
                                     <div class="cell-content">
                                         <font th:if="${component.config == null || 
                                                      #strings.length(component.config)==0}"
@@ -498,5 +510,7 @@ function setPageSizeAndSubmit() {
 
 
 </script>
+
+  <script th:each="js : ${returnPage.js}" th:src="${js.filePath}"></script>
 </body>
 </html>
