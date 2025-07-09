@@ -23,7 +23,7 @@ $(document).ready(function() {
       
     }
   });
-  
+  //计算相差
   
   var $trs = $("tr:has(td[name='td-ma'])");
        
@@ -60,5 +60,33 @@ $(document).ready(function() {
            $element.html(formatted + increment);
          }
        });
+	   var  tps=0;
+	   //计算手续费
+	   $('[name="td-loss"]').each(function() {
+	      // 获取当前元素的文本并转换为数字
+	      var $element = $(this);
+	      var text =$element.text();
+		  var lists;
+		  var ps;
+		  var ps1;
+	     if(text){
+			
+			lists=text.split(",")
+		
+			$.each(lists, function(index, value) {
+			   if(value){
+				ps=value.split("-")
+				ps1=parseFloat(ps[1]);
+				if (!isNaN(ps1)) {
+					tps= parseFloat(tps) + ps1;
+				}
+				
+			   }
+			});
+		  }
+	        
+	    });
+		var $ths = $("table th:contains('损耗')");
+		$ths.text("损耗 "+tps)
 });
    
